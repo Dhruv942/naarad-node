@@ -33,6 +33,12 @@ const watiDispatchSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // Optional: hash of original full article content (Perplexity article)
+    article_hash: {
+      type: String,
+      required: false,
+      index: true,
+    },
     image_url: {
       type: String,
       required: false,
@@ -59,8 +65,11 @@ const watiDispatchSchema = new mongoose.Schema(
   }
 );
 
-// Compound index for duplicate prevention
+// Compound index for duplicate prevention on formatted content
 watiDispatchSchema.index({ user_id: 1, template_name: 1, content_hash: 1 });
+
+// Optional index for original-article-level duplicate prevention
+watiDispatchSchema.index({ user_id: 1, template_name: 1, article_hash: 1 });
 
 const WatiDispatch = mongoose.model(
   "WatiDispatch",

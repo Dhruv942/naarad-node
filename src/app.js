@@ -5,6 +5,7 @@ require("dotenv").config();
 const authRoutes = require("./routes/authRoutes");
 const alertRoutes = require("./routes/alertRoutes");
 const newsRoutes = require("./routes/newsRoutes");
+const watiRoutes = require("./routes/watiRoutes");
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get("/health", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/alerts", alertRoutes);
 app.use("/news", newsRoutes);
+app.use("/wati", watiRoutes);
 
 // 404 handler
 app.use((req, res) => {

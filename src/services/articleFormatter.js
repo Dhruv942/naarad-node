@@ -331,6 +331,12 @@ ${articleForPrompt}
             ? article
             : article.article || JSON.stringify(article);
 
+        // Preserve underlying article_hash if present
+        const articleHash =
+          typeof article === "object" && article.article_hash
+            ? article.article_hash
+            : null;
+
         if (!articleText || articleText.trim().length === 0) {
           continue;
         }
@@ -340,6 +346,10 @@ ${articleForPrompt}
           userIntent
         );
         if (formatted && formatted.title && formatted.description) {
+          // Attach source article hash if available
+          if (articleHash) {
+            formatted.article_hash = articleHash;
+          }
           // Get image for the article
           if (this.imageSearchService) {
             try {

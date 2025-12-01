@@ -1,4 +1,5 @@
 const axios = require("axios");
+const crypto = require("crypto");
 
 class PerplexityNewsFetcher {
   constructor(model = "sonar-pro") {
@@ -174,16 +175,21 @@ class PerplexityNewsFetcher {
           else if (item.text && typeof item.text === "string") {
             articleText = item.text;
           }
-          // If item itself is a string
-          else if (typeof item === "string") {
-            articleText = item;
-          }
         } else if (typeof item === "string") {
           articleText = item;
         }
 
         if (articleText && articleText.trim().length > 0) {
-          articles.push(articleText.trim());
+          const clean = articleText.trim();
+          const articleHash = crypto
+            .createHash("sha256")
+            .update(clean, "utf-8")
+            .digest("hex");
+
+          articles.push({
+            article: clean,
+            article_hash: articleHash,
+          });
         }
       }
 
@@ -195,7 +201,7 @@ class PerplexityNewsFetcher {
         );
       }
 
-      // Return max 4 articles
+      // Return max 4 articles (now as objects with article + article_hash)
       return articles.slice(0, 4);
     } catch (error) {
       if (error instanceof SyntaxError) {

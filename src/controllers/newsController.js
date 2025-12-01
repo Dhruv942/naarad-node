@@ -95,6 +95,9 @@ const getNewsForAlert = async (req, res) => {
             title: primaryArticle.title,
             description: primaryArticle.description,
             image_url: primaryArticle.image_url,
+            // Pass through original article hash if available so WATI
+            // can detect duplicates even if title/description change
+            article_hash: primaryArticle.article_hash,
           },
           // phone can be resolved from DB using user_id inside service
           phone: null,
