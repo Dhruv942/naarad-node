@@ -6,6 +6,7 @@ const authRoutes = require("./routes/authRoutes");
 const alertRoutes = require("./routes/alertRoutes");
 const newsRoutes = require("./routes/newsRoutes");
 const watiRoutes = require("./routes/watiRoutes");
+const cronRoutes = require("./routes/cronRoutes");
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/auth", authRoutes);
 app.use("/alerts", alertRoutes);
 app.use("/news", newsRoutes);
 app.use("/wati", watiRoutes);
+app.use("/cron", cronRoutes);
 
 // 404 handler
 app.use((req, res) => {

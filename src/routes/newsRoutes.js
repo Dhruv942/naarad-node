@@ -10,11 +10,12 @@ const {
 } = require("../middleware/alertValidation");
 
 /**
- * @route   GET /news/user/:user_id
- * @desc    Process user alerts and store intent
+ * @route   POST /news/user/:user_id
+ * @desc    Process user alerts, parse intent, and store in database
  * @access  Public
+ * @note    This endpoint parses all active alerts for the user and stores their intents
  */
-router.get(
+router.post(
   "/user/:user_id",
   validateUserId,
   handleValidationErrors,

@@ -175,16 +175,96 @@ Health check endpoint.
   - `createdAt` (Date, auto)
   - `updatedAt` (Date, auto)
 
+## Cron Job
+
+The backend includes an automated cron job that:
+
+1. Fetches all active alerts
+2. Parses and stores intents (if not already stored)
+3. Fetches news from Perplexity
+4. Formats articles
+5. Sends WATI notifications
+
+### Configuration
+
+The cron job runs automatically in production mode, or when `ENABLE_CRON=true` is set.
+
+**Environment Variables:**
+
+- `ENABLE_CRON` - Enable cron job (set to `"true"` to enable, or runs automatically in production)
+- `CRON_INTERVAL` - Cron schedule (default: `"*/30 * * * *"` = every 30 minutes)
+
+**Cron Schedule Format:**
+
+```
+* * * * *
+│ │ │ │ │
+│ │ │ │ └── Day of week (0-7, 0 or 7 = Sunday)
+│ │ │ └──── Month (1-12)
+│ │ └────── Day of month (1-31)
+│ └──────── Hour (0-23)
+└────────── Minute (0-59)
+```
+
+**Examples:**
+
+- `*/30 * * * *` - Every 30 minutes
+- `0 * * * *` - Every hour
+- `0 */6 * * *` - Every 6 hours (24 hours me 4 baar – 00:00, 06:00, 12:00, 18:00)
+- `0 9 * * *` - Daily at 9:00 AM
+
+### Manual Trigger
+
+You can manually trigger the cron job:
+
+```bash
+POST /cron/trigger
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Cron job triggered successfully"
+}
+```
+
+### Check Status
+
+```bash
+GET /cron/status
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "isRunning": false,
+    "lastRun": "2024-01-01T12:00:00.000Z",
+    "cronInterval": "*/30 * * * *",
+    "isScheduled": true
+  }
+}
+```
+
 ## Environment Variables
 
-| Variable             | Description               | Default            |
-| -------------------- | ------------------------- | ------------------ |
-| `PORT`               | Server port               | `3000`             |
-| `NODE_ENV`           | Environment               | `development`      |
-| `MONGODB_URI`        | MongoDB connection string | Required           |
-| `WATI_API_ENDPOINT`  | WATI API endpoint         | Required           |
-| `WATI_API_TOKEN`     | WATI API token            | Required           |
-| `WATI_TEMPLATE_NAME` | WATI template name        | `welcome_template` |
+| Variable              | Description               | Default            |
+| --------------------- | ------------------------- | ------------------ |
+| `PORT`                | Server port               | `3000`             |
+| `NODE_ENV`            | Environment               | `development`      |
+| `MONGODB_URI`         | MongoDB connection string | Required           |
+| `ENABLE_CRON`         | Enable cron job           | Auto in production |
+| `CRON_INTERVAL`       | Cron schedule             | `*/30 * * * *`     |
+| `WATI_ACCESS_TOKEN`   | WATI API token            | Required           |
+| `WATI_BASE_URL`       | WATI API base URL         | Required           |
+| `WATI_TEMPLATE_NAME`  | WATI template name        | `sports`           |
+| `WATI_BROADCAST_NAME` | WATI broadcast name       | `sports_broadcast` |
+| `GEMINI_API_KEY`      | Google Gemini API key     | Required           |
+| `PERPLEXITY_API_KEY`  | Perplexity API key        | Required           |
 
 ## Technologies
 
@@ -200,4 +280,5 @@ Health check endpoint.
 ## License
 
 ISC
+
 # naarad-node
