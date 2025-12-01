@@ -9,6 +9,7 @@ connectDB();
 
 // Start server
 app.listen(PORT, () => {
+  console.log("🚀 Naarad backend server is now running");
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 

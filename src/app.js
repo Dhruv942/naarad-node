@@ -15,6 +15,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Basic startup log for Naarad app initialization
+console.log("✅ Initializing Naarad Express app...");
+
 // Health check route
 app.get("/health", (req, res) => {
   res.status(200).json({
@@ -35,7 +38,7 @@ app.use("/cron", cronRoutes);
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Route not found',
+    message: "Route not found",
   });
 });
 
@@ -50,4 +53,3 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
-

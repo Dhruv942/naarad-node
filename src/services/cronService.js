@@ -257,6 +257,7 @@ class CronService {
 
   /**
    * Start the cron job
+   * Runs immediately on start, then schedules based on interval
    */
   start() {
     if (this.cronJob) {
@@ -266,11 +267,20 @@ class CronService {
 
     console.log(`[CRON] Starting cron job with interval: ${this.cronInterval}`);
 
+    // Run immediately on server start
+    console.log("[CRON] Running initial job on server start...");
+    this.processAllAlerts().catch((error) => {
+      console.error("[CRON] Error in initial job:", error);
+    });
+
+    // Schedule recurring job
     this.cronJob = cron.schedule(this.cronInterval, async () => {
       await this.processAllAlerts();
     });
 
-    console.log("[CRON] Cron job started successfully");
+    console.log(
+      "[CRON] Cron job started successfully (initial run completed, scheduled for recurring execution)"
+    );
   }
 
   /**
