@@ -38,20 +38,22 @@ const getNewsForAlert = async (req, res) => {
     }
 
     // Check if required fields exist
-    if (!alertIntent.perplexity_prompt || !alertIntent.perplexity_query) {
+    if (!alertIntent.perplexity_query) {
       return res.status(400).json({
         success: false,
         message:
-          "Alert intent is missing perplexity_prompt or perplexity_query. Please parse the alert again.",
+          "Alert intent is missing perplexity_query. Please parse the alert again.",
       });
     }
 
     // Convert to intent format for Perplexity fetcher
     const intent = {
       perplexity_query: alertIntent.perplexity_query,
-      perplexity_prompt: alertIntent.perplexity_prompt,
       topic: alertIntent.topic,
       category: alertIntent.category,
+      subcategory: alertIntent.subcategory || [],
+      followup_questions: alertIntent.followup_questions || [],
+      custom_question: alertIntent.custom_question || "",
       timeframe: alertIntent.timeframe,
     };
 
@@ -128,6 +130,8 @@ const getNewsForAlert = async (req, res) => {
       data: {
         alert_id: alert_id,
         query: newsPayload.query,
+        prompt: newsPayload.prompt,
+        intent_summary: alertIntent.intent_summary,
         raw_articles: rawArticles,
         formatted_articles: formattedArticles,
         article_count: {
@@ -172,15 +176,14 @@ const fetchNewsForAlert = async (alert_id, user_id = null) => {
       throw new Error("Alert intent not found");
     }
 
-    if (!alertIntent.perplexity_prompt || !alertIntent.perplexity_query) {
-      throw new Error("Alert intent missing perplexity fields");
-    }
-
     const intent = {
       perplexity_query: alertIntent.perplexity_query,
-      perplexity_prompt: alertIntent.perplexity_prompt,
+      intent_summary: alertIntent.intent_summary,
       topic: alertIntent.topic,
       category: alertIntent.category,
+      subcategory: alertIntent.subcategory || [],
+      followup_questions: alertIntent.followup_questions || [],
+      custom_question: alertIntent.custom_question || "",
       timeframe: alertIntent.timeframe,
     };
 

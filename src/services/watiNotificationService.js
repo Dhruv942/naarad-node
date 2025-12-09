@@ -88,7 +88,8 @@ class WatiNotificationService {
     const customParams = [
       { name: "1", value: imageUrl || "" },
       { name: "2", value: title || "" },
-      { name: "3", value: (description || "").slice(0, 500) },
+      // Send full description (no truncation); downstream template must handle size
+      { name: "3", value: description || "" },
     ];
 
     const receiver = {

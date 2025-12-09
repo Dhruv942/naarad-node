@@ -43,7 +43,27 @@ class LLMIntentParser {
     } = alertData;
 
     const combinedTopic = topic || category || "General";
-    const followups = followup_questions.join(", ");
+    const followups =
+      Array.isArray(followup_questions) && followup_questions.length > 0
+        ? followup_questions
+            .map((fq) => {
+              if (fq && typeof fq === "object") {
+                const q = fq.question ? `Q:${fq.question}` : "Q:Unknown";
+                const sel = fq.selected_answer
+                  ? `Selected:${fq.selected_answer}`
+                  : "Selected:None";
+                const opts =
+                  Array.isArray(fq.options) && fq.options.length > 0
+                    ? `Options:${fq.options.join("/")}`
+                    : "Options:None";
+                return `${q} | ${opts} | ${sel}`;
+              }
+              if (typeof fq === "string") return fq;
+              return "";
+            })
+            .filter(Boolean)
+            .join("; ")
+        : "None";
     const subs = subcategories.join(", ");
 
     return `
@@ -62,7 +82,8 @@ You must generate a human-like intent summary that explains exactly:
 - at what detail,
 - what conditions or filters matter,
 - which direction to track,
-- how recent the news should be.
+- how recent the news should be,
+- how the final update can feel curated and satisfying for the user.
 
 Do NOT create generic summaries.
 
@@ -81,15 +102,16 @@ Return valid JSON ONLY:
   "subcategory": ["..."],
   "custom_question": "exact custom text",
   "followup_questions": ["..."],
-  "intent_summary": "Deep, detailed interpretation. MUST include and merge ALL parts: category, subcategories, follow-ups, custom question, domain, and topic.
+  "intent_summary": "Deep, detailed interpretation. MUST include and merge ALL parts: category, subcategories, follow-ups (respecting the user's SELECTED answers as strong preferences), custom question, domain, and topic.
 
 Example style:
 'The user wants alerts for cricket in the Sports category with focus on Test, ODI and T20 formats, especially player or team updates. They specifically want only final match scores, win/lose updates, day-wise Test scores and YouTube highlights if available.'
 
 The summary must read like this level of detail.",
   "timeframe": "24hours|3days|1week|1month",
-  "perplexity_query": "optimized search query",
-  "perplexity_prompt": "instructions for news fetching",
+"perplexity_query": "Natural-language, single-sentence search query (no AND/OR/boolean). MUST include category, subcategories, follow-ups (if any), custom question, and the recency constraint from timeframe (e.g., last 3 days / last 24 hours). Keep it concise (<220 chars) and readable."
+
+
   "requires_live_data": true/false
 }
 
@@ -105,8 +127,8 @@ RULES:
 2. NEVER drop numbers, dates, reports or specific domain signals.
 
 3. Timeframe rules:
-   - "24hours" for urgent or live or score type alerts
-   - "3days" for recent updates
+   - "24hours" for urgent/live/score alerts
+   - "3days" for recent updates (default)
    - "1week" for general updates
    - "1month" for long trend requests
 
@@ -144,115 +166,136 @@ RULES:
       subcategories = [],
       followup_questions = [],
       topic = "",
+      category = "",
+      timeframe = "3days",
+      intent_summary = "",
     } = alertData;
 
-    const stopWords = new Set([
-      "the",
-      "a",
-      "an",
-      "and",
-      "or",
-      "but",
-      "in",
-      "on",
-      "at",
-      "to",
-      "for",
-      "of",
-      "with",
-      "by",
-      "from",
-      "is",
-      "are",
-      "was",
-      "were",
-      "be",
-      "been",
-      "being",
-      "have",
-      "has",
-      "had",
-      "do",
-      "does",
-      "did",
-      "will",
-      "would",
-      "should",
-      "could",
-      "may",
-      "might",
-      "must",
-      "can",
-    ]);
+    // If intent_summary already exists, use that directly to avoid noisy queries
+    const summaryClean =
+      typeof intent_summary === "string" ? intent_summary.trim() : "";
+    if (summaryClean) return summaryClean;
 
-    const terms = [];
+    const main = category || topic || "news";
+    const subs =
+      Array.isArray(subcategories) && subcategories.length > 0
+        ? ` about ${subcategories.slice(0, 2).join(", ")}`
+        : "";
+    const custom =
+      typeof custom_question === "string" && custom_question.trim().length > 0
+        ? ` and also address: ${custom_question.trim()}`
+        : "";
+    const tf =
+      timeframe === "24hours"
+        ? "in the last 24 hours"
+        : timeframe === "1week"
+        ? "in the last 7 days"
+        : timeframe === "1month"
+        ? "in the last 30 days"
+        : "in the last 3 days";
 
-    if (custom_question) {
-      terms.push(
-        ...custom_question
-          .toLowerCase()
-          .split(/\s+/)
-          .filter((w) => w.length > 2 && !stopWords.has(w))
-          .slice(0, 3)
+    const sentence = `Find latest ${main}${subs}${custom}, strictly ${tf}.`;
+    return sentence.length > 220 ? sentence.slice(0, 220) : sentence;
+  }
+
+  /**
+   * Build preference notes to feed into perplexity prompt
+   */
+  _buildPreferenceNotes(alertData = {}) {
+    const {
+      subcategories,
+      followup_questions,
+      custom_question,
+      topic,
+      category,
+    } = alertData || {};
+
+    const notes = [];
+
+    if (Array.isArray(subcategories) && subcategories.length > 0) {
+      notes.push(`Prioritize sub-interests: ${subcategories.join(", ")}`);
+    }
+
+    const cleanedFollowUps = Array.isArray(followup_questions)
+      ? followup_questions
+          .filter((q) => typeof q === "string" && q.trim().length > 0)
+          .map((q) => q.trim())
+      : [];
+    if (cleanedFollowUps.length > 0) {
+      notes.push(
+        `Answer follow-up prompts such as: ${cleanedFollowUps.join("; ")}`
       );
     }
 
-    if (subcategories.length > 0) {
-      terms.push(
-        ...subcategories
-          .slice(0, 2)
-          .map((c) => c.toLowerCase().replace(/\s+/g, ""))
+    const trimmedCustom =
+      typeof custom_question === "string" ? custom_question.trim() : "";
+    if (trimmedCustom) {
+      notes.push(`Directly cover the custom ask: ${trimmedCustom}`);
+    }
+
+    const domain = topic || category;
+    if (domain) {
+      notes.push(
+        `Anchor every update strictly to ${domain} and avoid unrelated detours.`
       );
     }
 
-    if (followup_questions.length > 0) {
-      terms.push(
-        ...followup_questions[0]
-          .toLowerCase()
-          .split(/\s+/)
-          .filter((w) => w.length > 2 && !stopWords.has(w))
-          .slice(0, 2)
-      );
-    }
+    notes.push(
+      "Select only premium, well-sourced reportage — no gossip, no clickbait, no low-credibility blogs."
+    );
+    notes.push(
+      "Craft the experience to feel personalized, high-trust, and satisfaction-first."
+    );
 
-    if (topic) {
-      const t = topic.toLowerCase().replace(/\s+/g, "");
-      if (!terms.includes(t)) terms.push(t);
-    }
-
-    const uniqueTerms = [...new Set(terms)];
-
-    return uniqueTerms.length === 0
-      ? "latest news"
-      : `${uniqueTerms.join(" AND ")} latest news`;
+    return notes.join(" | ");
   }
 
   /**
    * Perplexity prompt builder
    */
-  _buildPerplexityPrompt(intentSummary, context, timeframe, focusAreas) {
+  _buildPerplexityPrompt(
+    intentSummary,
+    context,
+    timeframe,
+    focusAreas,
+    preferenceNotes = ""
+  ) {
+    const safeFocus = Array.isArray(focusAreas)
+      ? focusAreas.filter(Boolean).join(", ")
+      : "";
+
+    const focusLine =
+      safeFocus ||
+      "Use the alert’s core category/subcategories as focus anchors.";
+    const preferenceLine =
+      preferenceNotes ||
+      "Mirror every stated preference or custom ask and make the user feel the news was hand-picked.";
+
     return `
-You are a strict news summarizer for Naarad.
+You are Naarad's premium news concierge.
 
-Task: Fetch the most relevant and recent news based on the user's inferred intent.
+MISSION:
+1. Fetch only authoritative, fact-checked reporting that aligns with the alert intent.
+2. Blend relevance + freshness so the user feels the update is handcrafted for them.
+3. Never invent details; cite only what trusted publications have actually reported.
 
-USER INTENT SUMMARY:
-${intentSummary}
 
-CONTEXT:
-${context}
-Timeframe: ${timeframe}
-Focus: ${focusAreas.join(", ")}
 
-EXCLUSIONS:
-politics, gossip, opinions, controversies, clickbait
+
 
 OUTPUT RULES:
-- Return 3–5 full article-style paragraphs
-- Preserve ALL numbers, dates, percentages, and metrics EXACTLY
-- No titles, bullets, or markdown
-- Tone casual but clear and factual
-- Every article must contain actual stats when available
+- Produce 3–5 flowing paragraphs (no titles, bullets, markdown, or quotes block).
+- Include concrete dates, numbers, companies, deals, KPIs, or analyst takeaways whenever available.
+- Maintain a modern, factual newsroom tone — calm, confident, premium.
+- Highlight why each development matters to the user's stated focus areas.
+- If a detail cannot be verified, be explicit and move on without speculation.
+
+QUALITY FILTERS:
+- Exclude politics, gossip, paid PR, rumor blogs, or low-signal chatter unless explicitly required.
+- Reject repetitive facts; every sentence should add value.
+- Prefer cross-verified coverage from outlets such as Reuters, Bloomberg, WSJ, FT, Guardian, BBC, Mint, ET, Moneycontrol, etc.
+
+Finish only after delivering the paragraphs. No extra commentary.
 `;
   }
 
@@ -272,7 +315,7 @@ OUTPUT RULES:
       custom_question || followup_questions.join(" ")
     );
 
-    const timeframe = requiresLiveData ? "24hours" : "1week";
+    const timeframe = requiresLiveData ? "24hours" : "3days";
 
     const intentSummary = `User wants updates on ${topic || category}${
       subcategories.length > 0 ? ` focusing on ${subcategories.join(", ")}` : ""
@@ -287,17 +330,12 @@ OUTPUT RULES:
       intent_summary: intentSummary,
       timeframe,
       perplexity_query: this._buildPerplexityQuery(alertData),
-      perplexity_prompt: this._buildPerplexityPrompt(
-        intentSummary,
-        `${category} news`,
-        timeframe,
-        subcategories
-      ),
+      // perplexity_prompt is now built in PerplexityNewsFetcher
       requires_live_data: requiresLiveData,
     };
   }
 
-  _normalizeIntent(intent) {
+  _normalizeIntent(intent, alertData) {
     if (typeof intent.subcategory === "string") {
       intent.subcategory = [intent.subcategory];
     }
@@ -306,7 +344,7 @@ OUTPUT RULES:
     }
 
     const valid = ["24hours", "3days", "1week", "1month"];
-    if (!valid.includes(intent.timeframe)) intent.timeframe = "1week";
+    if (!valid.includes(intent.timeframe)) intent.timeframe = "3days";
 
     if (intent.requires_live_data == null) {
       const urgency =
@@ -316,6 +354,24 @@ OUTPUT RULES:
     }
 
     if (intent.requires_live_data) intent.timeframe = "24hours";
+
+    // Ensure perplexity_query exists and is concise
+    if (
+      !intent.perplexity_query ||
+      typeof intent.perplexity_query !== "string" ||
+      !intent.perplexity_query.trim()
+    ) {
+      intent.perplexity_query = this._buildPerplexityQuery(alertData || intent);
+    }
+    // Trim and cap length to keep retrieval tight
+    intent.perplexity_query = intent.perplexity_query.trim();
+    if (intent.perplexity_query.length > 180) {
+      intent.perplexity_query = intent.perplexity_query.slice(0, 180);
+    }
+
+    // perplexity_prompt is now built in PerplexityNewsFetcher, not here
+    // Remove any perplexity_prompt that might have come from Gemini
+    delete intent.perplexity_prompt;
 
     return intent;
   }
@@ -340,7 +396,8 @@ OUTPUT RULES:
 
       let parsed = JSON.parse(cleaned);
 
-      return this._normalizeIntent(parsed);
+      // Normalize intent and add perplexity_prompt (always built directly, not from Gemini)
+      return this._normalizeIntent(parsed, alertData);
     } catch (e) {
       console.log("LLM parse error", e.message);
       return this._fallbackParse(alertData);

@@ -1,0 +1,1228 @@
+{
+  "SPORTS": {
+    "id": "sports",
+    "label": "Sports",
+    "subCategories": [
+      {
+        "id": "sports_cricket",
+        "label": "Cricket",
+        "popularTeams": [
+          { "id": "cricket_team_rcb", "label": "Royal Challengers Bengaluru" },
+          { "id": "cricket_team_mi", "label": "Mumbai Indians" },
+          { "id": "cricket_team_csk", "label": "Chennai Super Kings" },
+          { "id": "cricket_team_ind", "label": "Team India" },
+          { "id": "cricket_team_aus", "label": "Team Australia" },
+          { "id": "cricket_team_eng", "label": "Team England" }
+        ],
+        "popularPlayers": [
+          { "id": "cricket_player_vk", "label": "Virat Kohli" },
+          { "id": "cricket_player_rs", "label": "Rohit Sharma" },
+          { "id": "cricket_player_msd", "label": "MS Dhoni" },
+          { "id": "cricket_player_sc", "label": "Shubman Gill" },
+          { "id": "cricket_player_jb", "label": "Jasprit Bumrah" },
+          { "id": "cricket_player_sp", "label": "Steve Smith" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "favTeam",
+            "text": "Which are your favorite cricket teams?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "favPlayer",
+            "text": "Any favorite cricket players you follow closely?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "cricket_leagues",
+            "text": "Which leagues or tournaments catch your eye?",
+            "predefinedAnswerTags": [
+              { "id": "cricket_ipl", "label": "IPL" },
+              { "id": "cricket_t20wc", "label": "T20 World Cup" },
+              { "id": "cricket_test", "label": "Test Matches" },
+              { "id": "cricket_odi", "label": "ODI World Cup" }
+            ],
+            "hasOtherOption": true
+          }
+        ],
+        "popularInstructionTags": [
+          {
+            "id": "cricket_instr_winsonly",
+            "label": "Notify on wins only (my team)"
+          },
+          { "id": "cricket_instr_scores", "label": "Include final scores" },
+          {
+            "id": "cricket_instr_milestones",
+            "label": "Alerts on milestones (100s, 5-fers)"
+          },
+          {
+            "id": "cricket_instr_nogossip",
+            "label": "No player gossip/rumors"
+          },
+          {
+            "id": "cricket_instr_highlights",
+            "label": "Prefer highlights links"
+          }
+        ]
+      },
+      {
+        "id": "sports_football",
+        "label": "Football",
+        "popularTeams": [
+          { "id": "football_team_mu", "label": "Manchester United" },
+          { "id": "football_team_rm", "label": "Real Madrid" },
+          { "id": "football_team_fcb", "label": "FC Barcelona" },
+          { "id": "football_team_liv", "label": "Liverpool FC" },
+          { "id": "football_team_bayern", "label": "Bayern Munich" },
+          { "id": "football_team_atkmb", "label": "ATK Mohun Bagan" }
+        ],
+        "popularPlayers": [
+          { "id": "football_player_lm", "label": "Lionel Messi" },
+          { "id": "football_player_cr7", "label": "Cristiano Ronaldo" },
+          { "id": "football_player_km", "label": "Kylian Mbappé" },
+          { "id": "football_player_sc", "label": "Sunil Chhetri" },
+          { "id": "football_player_neymar", "label": "Neymar Jr." },
+          { "id": "football_player_haaland", "label": "Erling Haaland" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "favTeam",
+            "text": "Which are your favorite football teams?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "favPlayer",
+            "text": "Any favorite football players you follow closely?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "football_updateType",
+            "text": "What kind of football news do you prefer?",
+            "predefinedAnswerTags": [
+              { "id": "updateType_matchResults", "label": "Match Results" },
+              {
+                "id": "updateType_transferNews",
+                "label": "Transfer News & Rumors"
+              },
+              { "id": "updateType_tactical", "label": "Tactical Analysis" },
+              { "id": "updateType_highlights", "label": "Highlight Links" },
+              {
+                "id": "football_updateType_trivia",
+                "label": "Interesting Trivia"
+              },
+              { "id": "football_updateType_nopref", "label": "No Preference" }
+            ],
+            "hasOtherOption": true
+          }
+        ],
+        "popularInstructionTags": [
+          {
+            "id": "football_instr_winsonly",
+            "label": "Notify on wins only (my team)"
+          },
+          { "id": "football_instr_scores", "label": "Include final scores" },
+          {
+            "id": "football_instr_transfers",
+            "label": "Focus on transfer news"
+          },
+          { "id": "football_instr_redcards", "label": "Alerts on red cards" },
+          {
+            "id": "football_instr_startinglineup",
+            "label": "Send starting lineup news"
+          }
+        ]
+      },
+      {
+        "id": "sports_basketball",
+        "label": "Basketball",
+        "popularTeams": [
+          { "id": "bball_team_lakers", "label": "Los Angeles Lakers" },
+          { "id": "bball_team_warriors", "label": "Golden State Warriors" },
+          { "id": "bball_team_celtics", "label": "Boston Celtics" },
+          { "id": "bball_team_bulls", "label": "Chicago Bulls" }
+        ],
+        "popularPlayers": [
+          { "id": "bball_player_lbj", "label": "LeBron James" },
+          { "id": "bball_player_sc", "label": "Stephen Curry" },
+          { "id": "bball_player_kd", "label": "Kevin Durant" },
+          { "id": "bball_player_giannis", "label": "Giannis Antetokounmpo" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "favTeam",
+            "text": "Which are your favorite basketball teams?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "favPlayer",
+            "text": "Any favorite basketball players you follow closely?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "bball_contentType",
+            "text": "Besides the scores, what kind of basketball content are you into?",
+            "predefinedAnswerTags": [
+              { "id": "bball_content_highlights", "label": "Game Highlights" },
+              {
+                "id": "bball_content_interviews",
+                "label": "Player Interviews"
+              },
+              { "id": "bball_content_trades", "label": "Trade Rumors" },
+              { "id": "bball_content_analysis", "label": "Deep Analysis" },
+              {
+                "id": "bball_contentType_trivia",
+                "label": "Interesting Trivia"
+              },
+              { "id": "bball_contentType_nopref", "label": "No Preference" }
+            ]
+          }
+        ],
+        "popularInstructionTags": [
+          { "id": "bball_instr_closegame", "label": "Alert for close games" },
+          { "id": "bball_instr_stats", "label": "Include player stats" },
+          { "id": "bball_instr_notrades", "label": "No trade rumors" }
+        ]
+      },
+      {
+        "id": "sports_tennis",
+        "label": "Tennis",
+        "popularPlayers": [
+          { "id": "tennis_player_djokovic", "label": "Novak Djokovic" },
+          { "id": "tennis_player_nadal", "label": "Rafael Nadal" },
+          { "id": "tennis_player_federer", "label": "Roger Federer" },
+          { "id": "tennis_player_alcaraz", "label": "Carlos Alcaraz" },
+          { "id": "tennis_player_swiatek", "label": "Iga Świątek" },
+          { "id": "tennis_player_serena", "label": "Serena Williams" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "favPlayer",
+            "text": "Any favorite tennis players you follow closely?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "tennis_events",
+            "text": "Which type of events are you most interested in?",
+            "predefinedAnswerTags": [
+              { "id": "tennis_grandslam_only", "label": "Grand Slams only" },
+              { "id": "tennis_atp", "label": "ATP Tour (Mens)" },
+              { "id": "tennis_wta", "label": "WTA Tour (Womens)" },
+              { "id": "tennis_all", "label": "All major events" }
+            ]
+          },
+          {
+            "id": "tennis_matchFocus",
+            "text": "When a match happens, what's the most important thing for me to tell you?",
+            "predefinedAnswerTags": [
+              { "id": "tennis_focus_score", "label": "Just the final score" },
+              { "id": "tennis_focus_moments", "label": "Key moments" },
+              { "id": "tennis_focus_summary", "label": "Full match summary" },
+              {
+                "id": "tennis_matchFocus_trivia",
+                "label": "Interesting Trivia"
+              },
+              { "id": "tennis_matchFocus_nopref", "label": "No Preference" }
+            ]
+          }
+        ],
+        "popularInstructionTags": [
+          { "id": "tennis_instr_upsets", "label": "Alert on major upsets" },
+          { "id": "tennis_instr_tiebreaks", "label": "Notify on tie-breaks" },
+          {
+            "id": "tennis_instr_mycountry",
+            "label": "Focus on my country's players"
+          }
+        ]
+      },
+      {
+        "id": "sports_f1",
+        "label": "Formula 1",
+        "popularTeams": [
+          { "id": "f1_team_mercedes", "label": "Mercedes-AMG Petronas" },
+          { "id": "f1_team_redbull", "label": "Oracle Red Bull Racing" },
+          { "id": "f1_team_ferrari", "label": "Scuderia Ferrari" },
+          { "id": "f1_team_mclaren", "label": "McLaren F1 Team" }
+        ],
+        "popularPlayers": [
+          { "id": "f1_driver_hamilton", "label": "Lewis Hamilton" },
+          { "id": "f1_driver_verstappen", "label": "Max Verstappen" },
+          { "id": "f1_driver_leclerc", "label": "Charles Leclerc" },
+          { "id": "f1_driver_norris", "label": "Lando Norris" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "favTeam",
+            "text": "Which are your favorite F1 teams?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "favPlayer",
+            "text": "Any favorite F1 drivers you follow closely?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "f1_session",
+            "text": "Which part of a race weekend interests you most?",
+            "predefinedAnswerTags": [
+              { "id": "f1_practice", "label": "Practice Sessions" },
+              { "id": "f1_qualifying", "label": "Qualifying" },
+              { "id": "f1_race", "label": "The Main Race" },
+              { "id": "f1_all", "label": "The whole weekend" }
+            ]
+          }
+        ],
+        "popularInstructionTags": [
+          { "id": "f1_instr_overtakes", "label": "Highlight key overtakes" },
+          {
+            "id": "f1_instr_safetycar",
+            "label": "Notify on safety car deployment"
+          },
+          {
+            "id": "f1_instr_qualyonly",
+            "label": "Only qualifying & race results"
+          }
+        ]
+      },
+      {
+        "id": "sports_golf",
+        "label": "Golf",
+        "popularPlayers": [
+          { "id": "golf_player_woods", "label": "Tiger Woods" },
+          { "id": "golf_player_scheffler", "label": "Scottie Scheffler" },
+          { "id": "golf_player_mcilroy", "label": "Rory McIlroy" },
+          { "id": "golf_player_rahm", "label": "Jon Rahm" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "favPlayer",
+            "text": "Any favorite golfers you follow closely?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "golf_tours",
+            "text": "Which professional tours do you follow?",
+            "predefinedAnswerTags": [
+              { "id": "golf_tour_pga", "label": "PGA Tour" },
+              { "id": "golf_tour_liv", "label": "LIV Golf" },
+              { "id": "golf_tour_lpga", "label": "LPGA Tour" },
+              { "id": "golf_tour_euro", "label": "European Tour" }
+            ]
+          },
+          {
+            "id": "golf_updateType",
+            "text": "During a tournament, what updates excite you most?",
+            "predefinedAnswerTags": [
+              { "id": "golf_update_summary", "label": "End-of-day summaries" },
+              { "id": "golf_update_holeinone", "label": "Hole-in-one alerts" },
+              { "id": "golf_update_leader", "label": "Leader changes" },
+              { "id": "golf_update_favs", "label": "My favorite players only" },
+              { "id": "golf_updateType_trivia", "label": "Interesting Trivia" },
+              { "id": "golf_updateType_nopref", "label": "No Preference" }
+            ]
+          }
+        ],
+        "popularInstructionTags": [
+          {
+            "id": "golf_instr_leaderboard",
+            "label": "Leaderboard updates only"
+          },
+          { "id": "golf_instr_majorsonly", "label": "Majors only" },
+          { "id": "golf_instr_finalround", "label": "Final round only" }
+        ]
+      },
+      {
+        "id": "sports_badminton",
+        "label": "Badminton",
+        "popularPlayers": [
+          { "id": "badminton_player_pvsindhu", "label": "PV Sindhu" },
+          { "id": "badminton_player_lsen", "label": "Lakshya Sen" },
+          { "id": "badminton_player_va", "label": "Viktor Axelsen" },
+          { "id": "badminton_player_ays", "label": "An Se-young" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "favPlayer",
+            "text": "Any favorite badminton players you follow closely?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "badminton_tournaments",
+            "text": "Which tournaments are a must-watch?",
+            "predefinedAnswerTags": [
+              { "id": "badminton_tourn_olympics", "label": "Olympics" },
+              {
+                "id": "badminton_tourn_bwf",
+                "label": "BWF World Championships"
+              },
+              {
+                "id": "badminton_tourn_allengland",
+                "label": "All England Open"
+              },
+              {
+                "id": "badminton_tourn_thomasuber",
+                "label": "Thomas & Uber Cup"
+              }
+            ]
+          },
+          {
+            "id": "badminton_newsType",
+            "text": "Beyond who won, what news interests you most?",
+            "predefinedAnswerTags": [
+              { "id": "badminton_news_rankings", "label": "Ranking changes" },
+              {
+                "id": "badminton_news_schedules",
+                "label": "Upcoming match schedules"
+              },
+              {
+                "id": "badminton_news_indian",
+                "label": "News about Indian players"
+              },
+              {
+                "id": "badminton_newsType_trivia",
+                "label": "Interesting Trivia"
+              },
+              { "id": "badminton_newsType_nopref", "label": "No Preference" }
+            ]
+          }
+        ],
+        "popularInstructionTags": [
+          {
+            "id": "badminton_instr_mycountry",
+            "label": "Focus on my country's players"
+          },
+          { "id": "badminton_instr_finals", "label": "Finals only" }
+        ]
+      },
+      {
+        "id": "sports_kabaddi",
+        "label": "Kabaddi",
+        "popularTeams": [
+          { "id": "kabaddi_team_patna", "label": "Patna Pirates" },
+          { "id": "kabaddi_team_bengaluru", "label": "Bengaluru Bulls" },
+          { "id": "kabaddi_team_jaipur", "label": "Jaipur Pink Panthers" }
+        ],
+        "popularPlayers": [
+          { "id": "kabaddi_player_pardeep", "label": "Pardeep Narwal" },
+          { "id": "kabaddi_player_pawan", "label": "Pawan Sehrawat" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "favTeam",
+            "text": "Which are your favorite kabaddi teams?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "favPlayer",
+            "text": "Any favorite kabaddi players?",
+            "hasOtherOption": true
+          },
+          {
+            "id": "kabaddi_leagues",
+            "text": "Which Kabaddi action are you tracking?",
+            "predefinedAnswerTags": [
+              { "id": "kabaddi_league_pkl", "label": "Pro Kabaddi League" },
+              {
+                "id": "kabaddi_league_international",
+                "label": "International Matches"
+              },
+              { "id": "kabaddi_league_super", "label": "Super Kabaddi League" }
+            ]
+          }
+        ],
+        "popularInstructionTags": [
+          { "id": "kabaddi_instr_superraid", "label": "Notify on Super Raids" },
+          { "id": "kabaddi_instr_winsonly", "label": "Wins only" }
+        ]
+      },
+      {
+        "id": "sports_esports",
+        "label": "eSports",
+        "followUpQuestions": [
+          {
+            "id": "esports_games",
+            "text": "Which games do you follow?",
+            "predefinedAnswerTags": [
+              { "id": "esports_valorant", "label": "Valorant" },
+              { "id": "esports_csgo", "label": "Counter-Strike" },
+              { "id": "esports_dota2", "label": "Dota 2" },
+              { "id": "esports_lol", "label": "League of Legends" },
+              { "id": "esports_bgmi", "label": "BGMI" }
+            ],
+            "hasOtherOption": true
+          },
+          {
+            "id": "esports_teamsRegions",
+            "text": "Any specific teams or regions you root for?",
+            "predefinedAnswerTags": [
+              { "id": "esports_region_na", "label": "North America" },
+              { "id": "esports_region_eu", "label": "Europe" },
+              { "id": "esports_region_asia", "label": "Asia" },
+              { "id": "esports_region_in", "label": "India" }
+            ],
+            "hasOtherOption": true
+          },
+          {
+            "id": "esports_newsType",
+            "text": "What kind of eSports news excites you?",
+            "predefinedAnswerTags": [
+              { "id": "esports_news_results", "label": "Tournament results" },
+              { "id": "esports_news_roster", "label": "Roster updates" },
+              { "id": "esports_news_patches", "label": "Major game updates" },
+              {
+                "id": "esports_newsType_trivia",
+                "label": "Interesting Trivia"
+              },
+              { "id": "esports_newsType_nopref", "label": "No Preference" }
+            ]
+          }
+        ],
+        "popularInstructionTags": [
+          { "id": "esports_instr_roster", "label": "Roster changes" },
+          { "id": "esports_instr_majors", "label": "Majors only" },
+          { "id": "esports_instr_twitch", "label": "Link to Twitch streams" }
+        ]
+      },
+      {
+        "id": "sports_other",
+        "label": "Other Sport",
+        "tags": [{ "id": "other_sport_generic", "label": "General Updates" }]
+      }
+    ]
+  },
+
+  "MOVIES_TV": {
+    "id": "moviesTV",
+    "label": "Movies & TV",
+    "subCategories": [
+      {
+        "id": "moviestv_hollywood",
+        "label": "Hollywood",
+        "popularInstructionTags": [
+          {
+            "id": "moviestv_instr_nospoilers",
+            "label": "No spoilers for new releases"
+          },
+          {
+            "id": "moviestv_instr_ratings",
+            "label": "Include Rotten Tomatoes score"
+          },
+          {
+            "id": "moviestv_instr_streamingonly",
+            "label": "Alerts for streaming availability only"
+          },
+          {
+            "id": "moviestv_instr_awardseason",
+            "label": "Focus on award seasons"
+          }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "hollywood_genres",
+            "text": "Which Hollywood genres do you enjoy?",
+            "predefinedAnswerTags": [
+              { "id": "genre_action", "label": "Action" },
+              { "id": "genre_comedy", "label": "Comedy" },
+              { "id": "genre_drama", "label": "Drama" },
+              { "id": "genre_scifi", "label": "Sci-Fi" },
+              { "id": "genre_horror", "label": "Horror" },
+              { "id": "genre_thriller", "label": "Thriller" }
+            ],
+            "hasOtherOption": true
+          },
+          {
+            "id": "hollywood_favs",
+            "text": "Any favorite actors or directors?",
+            "predefinedAnswerTags": [
+              { "id": "hollywood_actor_leo", "label": "Leonardo DiCaprio" },
+              { "id": "hollywood_actor_zendaya", "label": "Zendaya" },
+              { "id": "hollywood_actor_rock", "label": "Dwayne Johnson" },
+              { "id": "hollywood_actor_robbie", "label": "Margot Robbie" },
+              {
+                "id": "hollywood_director_nolan",
+                "label": "Christopher Nolan"
+              },
+              {
+                "id": "hollywood_director_tarantino",
+                "label": "Quentin Tarantino"
+              }
+            ],
+            "hasOtherOption": true
+          },
+          {
+            "id": "releaseAlerts",
+            "text": "When do you want release alerts?",
+            "predefinedAnswerTags": [
+              { "id": "release_theatrical", "label": "Theatrical Release" },
+              { "id": "release_streaming", "label": "Streaming Release" },
+              { "id": "release_both", "label": "Both" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "moviestv_bollywood",
+        "label": "Bollywood",
+        "popularInstructionTags": [
+          { "id": "bollywood_instr_nospoilers", "label": "No spoilers" },
+          { "id": "bollywood_instr_music", "label": "Include music releases" },
+          {
+            "id": "bollywood_instr_boxoffice",
+            "label": "Include box office numbers"
+          },
+          {
+            "id": "bollywood_instr_interviews",
+            "label": "Cast & director interviews"
+          }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "bollywood_genres",
+            "text": "What kind of Bollywood movies do you enjoy?",
+            "predefinedAnswerTags": [
+              { "id": "bwood_genre_masala", "label": "Masala / Action" },
+              { "id": "bwood_genre_romcom", "label": "Rom-Com" },
+              { "id": "bwood_genre_drama", "label": "Drama" },
+              { "id": "bwood_genre_thriller", "label": "Thriller/Crime" }
+            ],
+            "hasOtherOption": true
+          },
+          {
+            "id": "bollywood_favs",
+            "text": "Favorite actors or directors?",
+            "predefinedAnswerTags": [
+              { "id": "bwood_actor_srk", "label": "Shah Rukh Khan" },
+              { "id": "bwood_actor_alia", "label": "Alia Bhatt" },
+              { "id": "bwood_actor_deepika", "label": "Deepika Padukone" },
+              { "id": "bwood_actor_akshay", "label": "Akshay Kumar" },
+              { "id": "bwood_director_hirani", "label": "Rajkumar Hirani" },
+              {
+                "id": "bwood_director_bhansali",
+                "label": "Sanjay Leela Bhansali"
+              }
+            ],
+            "hasOtherOption": true
+          },
+          {
+            "id": "bollywood_music",
+            "text": "How important is music for you?",
+            "predefinedAnswerTags": [
+              { "id": "bwood_music_very", "label": "Very important" },
+              { "id": "bwood_music_somewhat", "label": "Just the hits" },
+              { "id": "bwood_music_not", "label": "Not important" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "moviestv_regional",
+        "label": "Regional Cinema",
+        "popularInstructionTags": [
+          {
+            "id": "regional_instr_subtitles",
+            "label": "Subtitle availability"
+          },
+          {
+            "id": "regional_instr_original_lang",
+            "label": "Original language only"
+          },
+          { "id": "regional_instr_remakes", "label": "News about remakes" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "regional_lang",
+            "text": "Which regional languages do you enjoy?",
+            "predefinedAnswerTags": [
+              { "id": "lang_tamil", "label": "Tamil" },
+              { "id": "lang_telugu", "label": "Telugu" },
+              { "id": "lang_malayalam", "label": "Malayalam" },
+              { "id": "lang_kannada", "label": "Kannada" },
+              { "id": "lang_bengali", "label": "Bengali" },
+              { "id": "lang_marathi", "label": "Marathi" }
+            ]
+          },
+          {
+            "id": "regional_genres",
+            "text": "Favorite genres?",
+            "predefinedAnswerTags": [
+              { "id": "regional_genre_action", "label": "Action" },
+              { "id": "regional_genre_drama", "label": "Drama" },
+              { "id": "regional_genre_comedy", "label": "Comedy" },
+              { "id": "regional_genre_thriller", "label": "Thriller" }
+            ]
+          },
+          {
+            "id": "regional_favs",
+            "text": "Favorite actors/directors?",
+            "predefinedAnswerTags": [
+              { "id": "regional_actor_rajini", "label": "Rajinikanth" },
+              { "id": "regional_actor_prabhas", "label": "Prabhas" },
+              { "id": "regional_actor_yash", "label": "Yash" },
+              { "id": "regional_actor_allu", "label": "Allu Arjun" },
+              {
+                "id": "regional_director_rajamouli",
+                "label": "S.S. Rajamouli"
+              },
+              { "id": "regional_director_ratnam", "label": "Mani Ratnam" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "moviestv_tv",
+        "label": "TV Shows & Series",
+        "popularInstructionTags": [
+          { "id": "tv_instr_nospoilers_ep", "label": "No episode spoilers" },
+          { "id": "tv_instr_newseason", "label": "Alert for new seasons only" },
+          { "id": "tv_instr_binge", "label": "Suggest binge-worthy shows" },
+          { "id": "tv_instr_weekly", "label": "Reminders for weekly episodes" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "tv_platforms",
+            "text": "Which streaming platforms do you use?",
+            "predefinedAnswerTags": [
+              { "id": "platform_netflix", "label": "Netflix" },
+              { "id": "platform_prime", "label": "Amazon Prime" },
+              { "id": "platform_disney", "label": "Disney+" },
+              { "id": "platform_hotstar", "label": "Hotstar" },
+              { "id": "platform_sonyliv", "label": "SonyLIV" }
+            ]
+          },
+          {
+            "id": "tv_genres",
+            "text": "What genres do you enjoy?",
+            "predefinedAnswerTags": [
+              { "id": "tv_genre_sitcom", "label": "Sitcom" },
+              { "id": "tv_genre_drama", "label": "Drama" },
+              { "id": "tv_genre_crime", "label": "Crime/Thriller" },
+              { "id": "tv_genre_fantasy", "label": "Fantasy/Sci-Fi" }
+            ]
+          },
+          {
+            "id": "tv_showStatus",
+            "text": "Your watching style?",
+            "predefinedAnswerTags": [
+              { "id": "tv_style_new", "label": "Currently airing shows" },
+              {
+                "id": "tv_style_binge",
+                "label": "Completed binge-worthy series"
+              },
+              {
+                "id": "tv_style_classic",
+                "label": "Critically-acclaimed classics"
+              }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "moviestv_docs",
+        "label": "Documentaries",
+        "popularInstructionTags": [
+          { "id": "docs_instr_deepdive", "label": "Prefer deep-dive series" },
+          { "id": "docs_instr_biography", "label": "Biographies" },
+          {
+            "id": "docs_instr_investigative",
+            "label": "Investigative journalism focus"
+          }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "docs_topics",
+            "text": "What documentary topics interest you?",
+            "predefinedAnswerTags": [
+              { "id": "docs_topic_nature", "label": "Nature & Wildlife" },
+              { "id": "docs_topic_history", "label": "History" },
+              { "id": "docs_topic_crime", "label": "True Crime" },
+              { "id": "docs_topic_science", "label": "Science & Tech" },
+              { "id": "docs_topic_sports", "label": "Sports" }
+            ]
+          },
+          {
+            "id": "docs_format",
+            "text": "Preferred format?",
+            "predefinedAnswerTags": [
+              { "id": "docs_format_film", "label": "Feature-length films" },
+              { "id": "docs_format_series", "label": "Docuseries" },
+              { "id": "docs_format_short", "label": "Short documentaries" },
+              { "id": "docs_format_trivia", "label": "Interesting Trivia" },
+              { "id": "docs_format_nopref", "label": "No Preference" }
+            ]
+          },
+          {
+            "id": "docs_platforms",
+            "text": "Where do you watch documentaries?",
+            "predefinedAnswerTags": [
+              { "id": "docs_platform_netflix", "label": "Netflix" },
+              { "id": "docs_platform_youtube", "label": "YouTube" },
+              { "id": "docs_platform_curiosity", "label": "CuriosityStream" },
+              { "id": "docs_platform_nebula", "label": "Nebula" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+
+  "NEWS": {
+    "id": "news",
+    "label": "News",
+    "subCategories": [
+      {
+        "id": "news_tech",
+        "label": "Technology",
+        "popularInstructionTags": [
+          { "id": "tech_instr_launches", "label": "Focus on product launches" },
+          {
+            "id": "tech_instr_no_funding",
+            "label": "Avoid startup funding news"
+          },
+          {
+            "id": "tech_instr_technical",
+            "label": "Include technical deep-dives"
+          },
+          { "id": "tech_instr_major_only", "label": "Major companies only" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "tech_storyType",
+            "text": "What tech stories interest you?",
+            "predefinedAnswerTags": [
+              { "id": "tech_story_startups", "label": "Startups" },
+              { "id": "tech_story_ai", "label": "AI & Innovation" },
+              { "id": "tech_story_gadgets", "label": "Gadgets" },
+              { "id": "tech_story_bigtech", "label": "Big Tech" }
+            ]
+          },
+          {
+            "id": "tech_side",
+            "text": "Which side of tech excites you?",
+            "predefinedAnswerTags": [
+              { "id": "tech_side_consumer", "label": "Consumer" },
+              { "id": "tech_side_enterprise", "label": "Enterprise" },
+              { "id": "tech_side_research", "label": "Research" }
+            ]
+          },
+          {
+            "id": "tech_vibe",
+            "text": "Your preferred style?",
+            "predefinedAnswerTags": [
+              { "id": "tech_vibe_breaking", "label": "Breaking news" },
+              { "id": "tech_vibe_deepdives", "label": "Deep dives" },
+              { "id": "tech_vibe_explainers", "label": "Fun explainers" },
+              { "id": "tech_vibe_trivia", "label": "Interesting Trivia" },
+              { "id": "tech_vibe_nopref", "label": "No Preference" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "news_finance",
+        "label": "Business & Finance",
+        "popularInstructionTags": [
+          {
+            "id": "finance_instr_local_market",
+            "label": "Focus on my country's market"
+          },
+          { "id": "finance_instr_no_crypto", "label": "No crypto news" },
+          { "id": "finance_instr_tickers", "label": "Include stock tickers" },
+          { "id": "finance_instr_ceo", "label": "CEO interviews" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "finance_storyType",
+            "text": "What finance stories do you enjoy?",
+            "predefinedAnswerTags": [
+              { "id": "finance_story_startups", "label": "Startups" },
+              { "id": "finance_story_global", "label": "Global markets" },
+              { "id": "finance_story_corps", "label": "Big corporates" },
+              { "id": "finance_story_personal", "label": "Personal finance" }
+            ]
+          },
+          {
+            "id": "finance_insights",
+            "text": "What kind of insights do you enjoy?",
+            "predefinedAnswerTags": [
+              { "id": "finance_insights_trends", "label": "Daily trends" },
+              { "id": "finance_insights_expert", "label": "Expert takes" },
+              { "id": "finance_insights_founder", "label": "Founder stories" },
+              {
+                "id": "finance_insights_trivia",
+                "label": "Interesting Trivia"
+              },
+              { "id": "finance_insights_nopref", "label": "No Preference" }
+            ]
+          },
+          {
+            "id": "finance_sectors",
+            "text": "Which sectors interest you?",
+            "predefinedAnswerTags": [
+              { "id": "finance_sector_tech", "label": "Tech" },
+              { "id": "finance_sector_finance", "label": "Finance" },
+              { "id": "finance_sector_fmcg", "label": "FMCG" },
+              { "id": "finance_sector_energy", "label": "Energy" },
+              { "id": "finance_sector_auto", "label": "Auto" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "news_world",
+        "label": "World Affairs",
+        "popularInstructionTags": [
+          { "id": "world_instr_diplomacy", "label": "Focus on diplomacy" },
+          {
+            "id": "world_instr_no_graphic",
+            "label": "No graphic conflict reports"
+          },
+          {
+            "id": "world_instr_context",
+            "label": "Include historical context"
+          },
+          { "id": "world_instr_trade", "label": "Summarize trade agreements" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "world_region",
+            "text": "What part of the world do you track?",
+            "predefinedAnswerTags": [
+              { "id": "world_region_sa", "label": "South Asia" },
+              { "id": "world_region_us", "label": "US" },
+              { "id": "world_region_eu", "label": "Europe" },
+              { "id": "world_region_global", "label": "Global mix" }
+            ]
+          },
+          {
+            "id": "world_updateType",
+            "text": "Preferred world updates?",
+            "predefinedAnswerTags": [
+              { "id": "world_update_geopolitics", "label": "Geopolitics" },
+              { "id": "world_update_economy", "label": "Economy" },
+              { "id": "world_update_diplomacy", "label": "Diplomacy" },
+              { "id": "world_update_conflicts", "label": "Conflicts" },
+              {
+                "id": "world_updateType_trivia",
+                "label": "Interesting Trivia"
+              },
+              { "id": "world_updateType_nopref", "label": "No Preference" }
+            ]
+          },
+          {
+            "id": "world_depth",
+            "text": "Depth preference?",
+            "predefinedAnswerTags": [
+              { "id": "world_depth_quick", "label": "Quick updates" },
+              { "id": "world_depth_deep", "label": "Deep analysis" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "news_science",
+        "label": "Science",
+        "popularInstructionTags": [
+          { "id": "sci_instr_eli5", "label": "Explain simply" },
+          { "id": "sci_instr_papers", "label": "Link to research papers" },
+          {
+            "id": "sci_instr_positive_breakthroughs",
+            "label": "Focus on breakthroughs"
+          },
+          { "id": "sci_instr_no_pseudoscience", "label": "No pseudoscience" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "sci_topic",
+            "text": "What fascinates you most?",
+            "predefinedAnswerTags": [
+              { "id": "sci_topic_space", "label": "Space" },
+              { "id": "sci_topic_bio", "label": "Biology" },
+              { "id": "sci_topic_physics", "label": "Physics" },
+              { "id": "sci_topic_env", "label": "Environment" }
+            ]
+          },
+          {
+            "id": "sci_depth",
+            "text": "Preferred depth?",
+            "predefinedAnswerTags": [
+              { "id": "sci_depth_simple", "label": "Simple" },
+              { "id": "sci_depth_medium", "label": "Medium" },
+              { "id": "sci_depth_research", "label": "Research-level" }
+            ]
+          },
+          {
+            "id": "sci_storyType",
+            "text": "What type of stories interest you?",
+            "predefinedAnswerTags": [
+              { "id": "sci_story_discoveries", "label": "Discoveries" },
+              { "id": "sci_story_experiments", "label": "Experiments" },
+              { "id": "sci_story_debates", "label": "Debates" },
+              { "id": "sci_storyType_trivia", "label": "Interesting Trivia" },
+              { "id": "sci_storyType_nopref", "label": "No Preference" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "news_health",
+        "label": "Health & Wellness",
+        "popularInstructionTags": [
+          {
+            "id": "health_instr_actionable",
+            "label": "Provide actionable tips"
+          },
+          { "id": "health_instr_sources", "label": "Cite scientific sources" },
+          {
+            "id": "health_instr_mental_focus",
+            "label": "Prioritize mental health"
+          },
+          { "id": "health_instr_no_fads", "label": "No diet fads" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "health_updateType",
+            "text": "What kind of health updates?",
+            "predefinedAnswerTags": [
+              { "id": "health_update_nutrition", "label": "Nutrition" },
+              { "id": "health_update_mental", "label": "Mental health" },
+              { "id": "health_update_fitness", "label": "Fitness" },
+              { "id": "health_update_research", "label": "Research" }
+            ]
+          },
+          {
+            "id": "health_contentStyle",
+            "text": "Preferred style?",
+            "predefinedAnswerTags": [
+              { "id": "health_content_lifestyle", "label": "Lifestyle tips" },
+              { "id": "health_content_studies", "label": "Studies & data" },
+              { "id": "health_content_mix", "label": "Balanced mix" },
+              {
+                "id": "health_contentStyle_trivia",
+                "label": "Interesting Trivia"
+              },
+              { "id": "health_contentStyle_nopref", "label": "No Preference" }
+            ]
+          },
+          {
+            "id": "health_tone",
+            "text": "Preferred tone?",
+            "predefinedAnswerTags": [
+              { "id": "health_tone_uplifting", "label": "Uplifting" },
+              { "id": "health_tone_edu", "label": "Educational" },
+              { "id": "health_tone_analytical", "label": "Analytical" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "news_politics",
+        "label": "Politics",
+        "popularInstructionTags": [
+          {
+            "id": "politics_instr_policy_analysis",
+            "label": "Focus on policy analysis"
+          },
+          {
+            "id": "politics_instr_no_opinion",
+            "label": "Avoid opinion pieces"
+          },
+          {
+            "id": "politics_instr_local_elections",
+            "label": "Cover local elections"
+          },
+          {
+            "id": "politics_instr_explain_process",
+            "label": "Explain legislative process"
+          }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "politics_space",
+            "text": "Which political area?",
+            "predefinedAnswerTags": [
+              { "id": "politics_space_national", "label": "National" },
+              { "id": "politics_space_state", "label": "State" },
+              { "id": "politics_space_global", "label": "Global" }
+            ]
+          },
+          {
+            "id": "politics_attention",
+            "text": "What interests you?",
+            "predefinedAnswerTags": [
+              { "id": "politics_attention_policy", "label": "Policy moves" },
+              { "id": "politics_attention_elections", "label": "Elections" },
+              {
+                "id": "politics_attention_strategy",
+                "label": "Strategy & power plays"
+              },
+              {
+                "id": "politics_attention_trivia",
+                "label": "Interesting Trivia"
+              },
+              { "id": "politics_attention_nopref", "label": "No Preference" }
+            ]
+          },
+          {
+            "id": "politics_tone",
+            "text": "Preferred tone?",
+            "predefinedAnswerTags": [
+              { "id": "politics_tone_neutral", "label": "Neutral" },
+              { "id": "politics_tone_analytical", "label": "Analytical" },
+              { "id": "politics_tone_witty", "label": "Witty" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "news_environment",
+        "label": "Environment",
+        "popularInstructionTags": [
+          { "id": "env_instr_solutions", "label": "Focus on solutions" },
+          { "id": "env_instr_data", "label": "Include data & statistics" },
+          {
+            "id": "env_instr_local_conservation",
+            "label": "Local conservation"
+          },
+          { "id": "env_instr_green_tech", "label": "Highlight green tech" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "env_storyType",
+            "text": "What stories interest you?",
+            "predefinedAnswerTags": [
+              { "id": "env_story_climate", "label": "Climate change" },
+              { "id": "env_story_conservation", "label": "Conservation" },
+              { "id": "env_story_energy", "label": "Clean energy" },
+              { "id": "env_story_pollution", "label": "Pollution" }
+            ]
+          },
+          {
+            "id": "env_angle",
+            "text": "Preferred angle?",
+            "predefinedAnswerTags": [
+              { "id": "env_angle_crises", "label": "Global crises" },
+              { "id": "env_angle_local", "label": "Local stories" },
+              { "id": "env_angle_innovation", "label": "Innovation" },
+              { "id": "env_angle_trivia", "label": "Interesting Trivia" },
+              { "id": "env_angle_nopref", "label": "No Preference" }
+            ]
+          },
+          {
+            "id": "env_hope",
+            "text": "What gives you hope?",
+            "predefinedAnswerTags": [
+              { "id": "env_hope_tech", "label": "New tech" },
+              { "id": "env_hope_activism", "label": "Activism" },
+              { "id": "env_hope_grassroots", "label": "Grassroots" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "news_education",
+        "label": "Education",
+        "popularInstructionTags": [
+          { "id": "edu_instr_higher_ed_policy", "label": "Higher-ed policy" },
+          {
+            "id": "edu_instr_no_exam_stress",
+            "label": "No exam stress articles"
+          },
+          { "id": "edu_instr_edtech_startups", "label": "EdTech startups" },
+          { "id": "edu_instr_skill_focus", "label": "Skill development" }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "edu_updateType",
+            "text": "What kind of education updates?",
+            "predefinedAnswerTags": [
+              { "id": "edu_update_edtech", "label": "Edtech" },
+              { "id": "edu_update_policy", "label": "Policy & exams" },
+              { "id": "edu_update_careers", "label": "Careers" },
+              { "id": "edu_update_highered", "label": "Higher ed" }
+            ]
+          },
+          {
+            "id": "edu_role",
+            "text": "Which describes you?",
+            "predefinedAnswerTags": [
+              { "id": "edu_role_student", "label": "Student" },
+              { "id": "edu_role_parent", "label": "Parent" },
+              { "id": "edu_role_teacher", "label": "Teacher" },
+              { "id": "edu_role_professional", "label": "Professional" }
+            ]
+          },
+          {
+            "id": "edu_storyType",
+            "text": "What inspires you?",
+            "predefinedAnswerTags": [
+              { "id": "edu_story_success", "label": "Success stories" },
+              { "id": "edu_story_trends", "label": "Trends" },
+              { "id": "edu_story_skills", "label": "Skill-building insights" },
+              { "id": "edu_storyType_trivia", "label": "Interesting Trivia" },
+              { "id": "edu_storyType_nopref", "label": "No Preference" }
+            ]
+          }
+        ]
+      },
+
+      {
+        "id": "news_local",
+        "label": "Local News",
+        "popularInstructionTags": [
+          {
+            "id": "local_instr_my_neighborhood",
+            "label": "Focus on my neighborhood"
+          },
+          { "id": "local_instr_weekend", "label": "Include weekend events" },
+          { "id": "local_instr_no_crime", "label": "No crime reports" },
+          {
+            "id": "local_instr_restaurants",
+            "label": "New restaurant openings"
+          }
+        ],
+        "followUpQuestions": [
+          {
+            "id": "local_updateType",
+            "text": "What local updates do you care about?",
+            "predefinedAnswerTags": [
+              { "id": "local_update_city", "label": "City issues" },
+              { "id": "local_update_culture", "label": "Culture & events" },
+              { "id": "local_update_openings", "label": "New openings" },
+              { "id": "local_update_safety", "label": "Safety alerts" }
+            ]
+          },
+          {
+            "id": "local_focus",
+            "text": "Where should I focus updates?",
+            "predefinedAnswerTags": [
+              { "id": "local_focus_city", "label": "My city" },
+              { "id": "local_focus_state", "label": "My state" },
+              { "id": "local_focus_region", "label": "Nearby region" }
+            ]
+          },
+          {
+            "id": "local_tone",
+            "text": "Preferred tone?",
+            "predefinedAnswerTags": [
+              { "id": "local_tone_info", "label": "Informative" },
+              { "id": "local_tone_actionable", "label": "Actionable" },
+              { "id": "local_tone_feelgood", "label": "Feel-good" },
+              { "id": "local_tone_trivia", "label": "Interesting Trivia" },
+              { "id": "local_tone_nopref", "label": "No Preference" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

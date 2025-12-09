@@ -10,7 +10,7 @@ class CronService {
   constructor() {
     this.isRunning = false;
     this.lastRun = null;
-    this.cronInterval = process.env.CRON_INTERVAL || "0 */6 * * *"; // Default: every 30 minutes
+    this.cronInterval = process.env.CRON_INTERVAL || "0 */6 * * *"; // Default: every 6 hours
     this.cronJob = null;
   }
 
@@ -43,26 +43,43 @@ class CronService {
       }
 
       // Step 2: Check if required fields exist
-      if (!alertIntent.perplexity_prompt || !alertIntent.perplexity_query) {
+      if (!alertIntent.perplexity_query) {
         console.warn(
-          `[CRON][ALERT] Alert ${alert_id} missing perplexity fields, skipping`
+          `[CRON][ALERT] Alert ${alert_id} missing perplexity_query, skipping`
         );
         return {
           alert_id,
           user_id,
           status: "skipped",
-          reason: "missing_perplexity_fields",
+          reason: "missing_perplexity_query",
         };
       }
 
       // Step 3: Fetch news from Perplexity
       const intent = {
         perplexity_query: alertIntent.perplexity_query,
-        perplexity_prompt: alertIntent.perplexity_prompt,
         topic: alertIntent.topic,
         category: alertIntent.category,
+        subcategory: alertIntent.subcategory || [],
+        followup_questions: alertIntent.followup_questions || [],
+        custom_question: alertIntent.custom_question || "",
         timeframe: alertIntent.timeframe,
       };
+
+      // Log SERP query source
+      console.log(`[CRON][ALERT] SERP Query Source for alert ${alert_id}:`);
+      console.log(
+        `  📍 From Database (AlertIntent.perplexity_query): ${alertIntent.perplexity_query}`
+      );
+      console.log(`  📍 Perplexity Prompt: Built in PerplexityNewsFetcher`);
+      console.log(`  📍 Alert Topic: ${alertIntent.topic}`);
+      console.log(`  📍 Category: ${alertIntent.category}`);
+      console.log(
+        `  📍 Subcategory: ${JSON.stringify(alertIntent.subcategory || [])}`
+      );
+      console.log(
+        `  📍 Custom Question: ${alertIntent.custom_question || "None"}`
+      );
 
       const fetcher = new PerplexityNewsFetcher();
       const newsPayload = await fetcher.fetchNews(intent);

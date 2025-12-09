@@ -34,11 +34,26 @@ const validateCreateAlert = [
     .withMessage("followup_questions must be an array")
     .custom((value) => {
       if (value && value.length > 0) {
-        return value.every((item) => typeof item === "string");
+        return value.every((item) => {
+          return (
+            typeof item === "object" &&
+            item !== null &&
+            typeof item.question === "string" &&
+            (item.selected_answer === undefined ||
+              item.selected_answer === null ||
+              typeof item.selected_answer === "string") &&
+            (item.options === undefined ||
+              item.options === null ||
+              (Array.isArray(item.options) &&
+                item.options.every((opt) => typeof opt === "string")))
+          );
+        });
       }
       return true;
     })
-    .withMessage("followup_questions must be an array of strings"),
+    .withMessage(
+      "followup_questions must be an array of objects with question (string), selected_answer (string, optional), and options (array of strings, optional)"
+    ),
 
   body("custom_question")
     .optional()
@@ -56,7 +71,29 @@ const validateUpdateAlert = [
   body("followup_questions")
     .optional()
     .isArray()
-    .withMessage("followup_questions must be an array"),
+    .withMessage("followup_questions must be an array")
+    .custom((value) => {
+      if (value && value.length > 0) {
+        return value.every((item) => {
+          return (
+            typeof item === "object" &&
+            item !== null &&
+            typeof item.question === "string" &&
+            (item.selected_answer === undefined ||
+              item.selected_answer === null ||
+              typeof item.selected_answer === "string") &&
+            (item.options === undefined ||
+              item.options === null ||
+              (Array.isArray(item.options) &&
+                item.options.every((opt) => typeof opt === "string")))
+          );
+        });
+      }
+      return true;
+    })
+    .withMessage(
+      "followup_questions must be an array of objects with question (string), selected_answer (string, optional), and options (array of strings, optional)"
+    ),
 
   body("is_active")
     .optional()

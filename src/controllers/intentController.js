@@ -9,9 +9,54 @@ const Alert = require("../models/Alert");
  */
 const parseAlertIntent = async (req, res) => {
   try {
-    const { alert_text, user_id, alert_id } = req.body;
+    const alert_text = req.body.alert_text || req.query.alert_text || "";
+    const user_id = req.body.user_id || req.query.user_id;
+    const alert_id = req.body.alert_id || req.query.alert_id;
 
     let alertData;
+
+    // NEW: parse all alerts for a user if only user_id is provided
+    const shouldParseAllAlerts = user_id && !alert_id && !alert_text;
+    if (shouldParseAllAlerts) {
+      const alerts = await Alert.find({ user_id: user_id });
+
+      if (alerts.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "No alerts found for the provided user_id",
+        });
+      }
+
+      const parser = new LLMIntentParser();
+      const results = [];
+
+      for (const alert of alerts) {
+        try {
+          const savedIntent = await parseAndStoreAlert(alert, parser);
+          results.push({
+            alert_id: alert.alert_id,
+            intent: savedIntent,
+          });
+        } catch (alertError) {
+          console.error(
+            `Bulk parse error for alert ${alert.alert_id}:`,
+            alertError.message
+          );
+          results.push({
+            alert_id: alert.alert_id,
+            error: alertError.message,
+          });
+        }
+      }
+
+      const successCount = results.filter((r) => r.intent).length;
+
+      return res.status(200).json({
+        success: successCount > 0,
+        message: `Processed ${successCount} of ${alerts.length} alerts`,
+        data: results,
+      });
+    }
 
     // If user_id and alert_id provided, fetch alert from database
     if (user_id && alert_id) {
@@ -48,7 +93,7 @@ const parseAlertIntent = async (req, res) => {
     } else {
       return res.status(400).json({
         success: false,
-        message: "Either alert_text or (user_id + alert_id) is required",
+        message: "Provide alert_text or both user_id and alert_id",
       });
     }
 
@@ -100,7 +145,8 @@ const parseAlertIntent = async (req, res) => {
     // If only alert_text provided, return without storing
     return res.status(200).json({
       success: true,
-      message: "Intent parsed successfully (not stored - provide user_id and alert_id to store)",
+      message:
+        "Intent parsed successfully (not stored - provide user_id and alert_id to store)",
       data: intent,
     });
   } catch (error) {
@@ -213,20 +259,56 @@ const processUserAlertsAndStoreIntent = async (req, res) => {
  * Parse and store intent for a single alert
  * Used in news pipeline
  */
-const parseAndStoreAlert = async (alert) => {
+const parseAndStoreAlert = async (alert, parserInstance = null) => {
   try {
-    const parser = new LLMIntentParser();
+    const parser = parserInstance || new LLMIntentParser();
+
+    // Normalize followup_questions to object format
+    const normalizeFollowups = (fqs) => {
+      if (!Array.isArray(fqs)) return [];
+      return fqs
+        .filter(Boolean)
+        .map((fq) => {
+          if (typeof fq === "string") {
+            return {
+              question: "",
+              selected_answer: fq,
+              options: [],
+            };
+          }
+          if (fq && typeof fq === "object") {
+            return {
+              question: fq.question || "",
+              selected_answer: fq.selected_answer || "",
+              options:
+                Array.isArray(fq.options) && fq.options.length
+                  ? fq.options
+                  : [],
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+    };
+
+    const normalizedFollowups = normalizeFollowups(alert.followup_questions);
 
     const alertData = {
       topic: alert.main_category,
       category: alert.main_category,
       subcategories: alert.sub_categories || [],
-      followup_questions: alert.followup_questions || [],
+      followup_questions: normalizedFollowups,
       custom_question: alert.custom_question || "",
       alert_id: alert.alert_id,
     };
 
     const intent = await parser.parseIntent(alertData);
+
+    // Normalize intent followups too (LLM may return strings)
+    const normalizedIntentFollowups = normalizeFollowups(
+      intent.followup_questions
+    );
+    intent.followup_questions = normalizedIntentFollowups;
 
     const intentData = {
       alert_id: alert.alert_id,
@@ -235,7 +317,7 @@ const parseAndStoreAlert = async (alert) => {
       category: intent.category,
       subcategory: intent.subcategory || [],
       custom_question: intent.custom_question || null,
-      followup_questions: intent.followup_questions || [],
+      followup_questions: normalizedIntentFollowups,
       intent_summary: intent.intent_summary,
       timeframe: intent.timeframe,
       perplexity_query: intent.perplexity_query,

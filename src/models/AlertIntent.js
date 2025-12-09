@@ -28,8 +28,18 @@ const alertIntentSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Follow-ups as objects: {question, selected_answer, options[]}
     followup_questions: {
-      type: [String],
+      type: [
+        new mongoose.Schema(
+          {
+            question: { type: String, required: false },
+            selected_answer: { type: String, required: false },
+            options: { type: [String], default: [] },
+          },
+          { _id: false }
+        ),
+      ],
       default: [],
     },
     intent_summary: {
@@ -74,4 +84,3 @@ const AlertIntent = mongoose.model(
 );
 
 module.exports = AlertIntent;
-

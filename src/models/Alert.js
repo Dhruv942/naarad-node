@@ -19,11 +19,21 @@ const alertSchema = new mongoose.Schema(
     },
     sub_categories: {
       type: [String],
-      default: null,
+      default: ["No Preference"],
     },
+    // Store follow-up details as objects: question text, selected answer, and all available options
     followup_questions: {
-      type: [String],
-      default: null,
+      type: [
+        new mongoose.Schema(
+          {
+            question: { type: String, required: false },
+            selected_answer: { type: String, required: false },
+            options: { type: [String], default: [] },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
     },
     custom_question: {
       type: String,

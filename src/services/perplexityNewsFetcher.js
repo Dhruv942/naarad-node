@@ -5,23 +5,16 @@ class PerplexityNewsFetcher {
   constructor(model = "sonar-pro") {
     this.model = model;
     this.apiKey = process.env.PERPLEXITY_API_KEY;
-    this.apiEndpoint = "https://api.perplexity.ai/chat/completions";
 
     if (!this.apiKey) {
-      throw new Error("PERPLEXITY_API_KEY is required for news fetching");
+      throw new Error("PERPLEXITY_API_KEY missing from environment");
     }
 
-    // Trim whitespace from API key
     this.apiKey = this.apiKey.trim();
 
-    // Validate API key format (should start with pplx-)
-    if (!this.apiKey.startsWith("pplx-")) {
-      console.warn("Warning: Perplexity API key should start with 'pplx-'");
-    }
-
-    // Create HTTP client with 90-second timeout
     this.client = axios.create({
-      timeout: 90000, // 90 seconds
+      baseURL: "https://api.perplexity.ai",
+      timeout: 90000,
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
         "Content-Type": "application/json",
@@ -29,300 +22,284 @@ class PerplexityNewsFetcher {
     });
   }
 
-  /**
-   * Strip markdown code fences from content
-   */
-  _stripCodeFences(content) {
-    if (!content) return content;
-    // Remove ```json and ``` wrappers
-    return content
-      .replace(/```json\n?/gi, "")
-      .replace(/```\n?/g, "")
+  // ------------------------------------------------------------
+  // UTILITIES
+  // ------------------------------------------------------------
+
+  _stripCodeFences(str) {
+    if (!str) return str;
+    return str
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
       .trim();
   }
 
-  /**
-   * Extract content from Perplexity response
-   */
-  _extractContent(response) {
-    try {
-      const choices = response.data?.choices;
-      if (!choices || choices.length === 0) {
-        throw new Error("No choices in Perplexity response");
-      }
-
-      const message = choices[0]?.message;
-      if (!message) {
-        throw new Error("No message in Perplexity response");
-      }
-
-      const content = message.content;
-      if (!content || typeof content !== "string") {
-        throw new Error("Invalid content format in Perplexity response");
-      }
-
-      return content;
-    } catch (error) {
-      throw new Error(`Invalid Perplexity response format: ${error.message}`);
-    }
+  _extractContent(resp) {
+    const msg = resp?.data?.choices?.[0]?.message?.content;
+    if (!msg) throw new Error("Invalid Perplexity response format");
+    return msg;
   }
 
-  /**
-   * Extract JSON from text that might contain extra content
-   */
-  _extractJSON(content) {
-    // Try to find JSON array first (most common)
-    const jsonArrayMatch = content.match(/\[[\s\S]*?\]/);
-    if (jsonArrayMatch) {
-      return jsonArrayMatch[0];
-    }
+  _extractJSON(text) {
+    const arrayMatch = text.match(/\[[\s\S]*?\]/);
+    if (arrayMatch) return arrayMatch[0];
 
-    // Try to find JSON object
-    const jsonObjectMatch = content.match(/\{[\s\S]*?\}/);
-    if (jsonObjectMatch) {
-      return jsonObjectMatch[0];
-    }
+    const objMatch = text.match(/\{[\s\S]*?\}/);
+    if (objMatch) return objMatch[0];
 
-    return content;
+    return text;
   }
 
-  /**
-   * Parse articles from JSON content
-   */
   _parseArticles(content) {
-    try {
-      // Strip code fences first
-      let cleanedContent = this._stripCodeFences(content);
-
-      if (!cleanedContent || cleanedContent.trim().length === 0) {
-        throw new Error("Perplexity returned empty content");
-      }
-
-      // Try to extract JSON if there's extra text
-      cleanedContent = this._extractJSON(cleanedContent);
-
-      // Remove any leading/trailing whitespace
-      cleanedContent = cleanedContent.trim();
-
-      // Try to find and extract just the JSON part
-      // Sometimes Perplexity adds explanatory text before/after JSON
-      let jsonStart = cleanedContent.indexOf("[");
-      let jsonEnd = cleanedContent.lastIndexOf("]");
-
-      if (jsonStart === -1) {
-        jsonStart = cleanedContent.indexOf("{");
-        jsonEnd = cleanedContent.lastIndexOf("}");
-      }
-
-      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-        cleanedContent = cleanedContent.substring(jsonStart, jsonEnd + 1);
-      }
-
-      // Parse JSON with better error handling
-      let parsed;
-      try {
-        parsed = JSON.parse(cleanedContent);
-      } catch (parseError) {
-        // Try one more time with more aggressive cleaning
-        // Remove anything before first [ or { and after last ] or }
-        const firstBracket = Math.min(
-          cleanedContent.indexOf("["),
-          cleanedContent.indexOf("{") === -1
-            ? Infinity
-            : cleanedContent.indexOf("{")
-        );
-        const lastBracket = Math.max(
-          cleanedContent.lastIndexOf("]"),
-          cleanedContent.lastIndexOf("}") === -1
-            ? -1
-            : cleanedContent.lastIndexOf("}")
-        );
-
-        if (
-          firstBracket !== -1 &&
-          lastBracket !== -1 &&
-          lastBracket > firstBracket
-        ) {
-          cleanedContent = cleanedContent.substring(
-            firstBracket,
-            lastBracket + 1
-          );
-          parsed = JSON.parse(cleanedContent);
-        } else {
-          throw parseError;
-        }
-      }
-
-      // Handle both single dict and list of dicts
-      const items = Array.isArray(parsed) ? parsed : [parsed];
-
-      // Extract article field from each item
-      const articles = [];
-      for (const item of items) {
-        // Try different possible field names
-        let articleText = null;
-
-        if (item && typeof item === "object") {
-          // Try "article" field first
-          if (item.article && typeof item.article === "string") {
-            articleText = item.article;
-          }
-          // Try "content" field
-          else if (item.content && typeof item.content === "string") {
-            articleText = item.content;
-          }
-          // Try "text" field
-          else if (item.text && typeof item.text === "string") {
-            articleText = item.text;
-          }
-        } else if (typeof item === "string") {
-          articleText = item;
-        }
-
-        if (articleText && articleText.trim().length > 0) {
-          const clean = articleText.trim();
-          const articleHash = crypto
-            .createHash("sha256")
-            .update(clean, "utf-8")
-            .digest("hex");
-
-          articles.push({
-            article: clean,
-            article_hash: articleHash,
-          });
-        }
-      }
-
-      // Log if no articles found
-      if (articles.length === 0 && items.length > 0) {
-        console.warn(
-          "No articles extracted. Items structure:",
-          JSON.stringify(items[0]).substring(0, 500)
-        );
-      }
-
-      // Return max 4 articles (now as objects with article + article_hash)
-      return articles.slice(0, 4);
-    } catch (error) {
-      if (error instanceof SyntaxError) {
-        console.error(
-          "JSON decode error. Content preview:",
-          content.substring(0, 2000)
-        );
-        console.error(
-          "Cleaned content preview:",
-          this._stripCodeFences(content).substring(0, 500)
-        );
-        throw new Error(`Perplexity returned invalid JSON: ${error.message}`);
-      }
-      throw error;
+    // If content is missing or not a string, return no articles instead of throwing
+    if (!content || typeof content !== "string") {
+      console.warn("Perplexity response missing or not a string");
+      return [];
     }
+
+    content = this._stripCodeFences(content);
+
+    const extracted = this._extractJSON(content);
+    let parsed;
+
+    try {
+      parsed = JSON.parse(extracted);
+    } catch {
+      // If JSON parse fails, log and return empty to avoid hard failures
+      console.warn(
+        "Perplexity returned invalid JSON. Content preview:",
+        content.substring(0, 500)
+      );
+      return [];
+    }
+
+    const items = Array.isArray(parsed) ? parsed : [parsed];
+
+    const articles = items
+      .map((item) => {
+        const text = item.article || item.content || item.text;
+        if (!text) return null;
+
+        const clean = text.trim();
+        return {
+          article: clean,
+          article_hash: crypto.createHash("sha256").update(clean).digest("hex"),
+        };
+      })
+      .filter(Boolean);
+
+    return articles.slice(0, 4);
   }
 
-  /**
-   * Main method: Fetch news from Perplexity
-   * @param {Object} intent - Intent object with perplexity_query and perplexity_prompt
-   * @returns {Promise<Object>} News payload with articles
-   */
+  // ------------------------------------------------------------
+  // BUILD SEARCH QUERY FOR PERPLEXITY SERP
+  // ------------------------------------------------------------
+
+  _buildSearchQuery(intent) {
+    const summary = (intent.intent_summary || "").trim();
+    const perplexityQuery =
+      typeof intent.perplexity_query === "string"
+        ? intent.perplexity_query.trim()
+        : "";
+
+    const hasNoise = (text) =>
+      typeof text === "string" && text.includes("[object Object]");
+
+    if (summary && !hasNoise(summary)) return summary;
+    if (perplexityQuery && !hasNoise(perplexityQuery)) return perplexityQuery;
+
+    // Rebuild a clean sentence
+    const category = intent.category || intent.topic || "news";
+    const sub =
+      Array.isArray(intent.subcategory) && intent.subcategory.length > 0
+        ? intent.subcategory.filter(Boolean).join(", ")
+        : "";
+    const followups = Array.isArray(intent.followup_questions)
+      ? intent.followup_questions
+          .map((fq) => {
+            if (fq && typeof fq === "object") {
+              const parts = [];
+              if (fq.question) parts.push(`Q:${fq.question}`);
+              if (Array.isArray(fq.options) && fq.options.length)
+                parts.push(`Options:${fq.options.join("/")}`);
+              if (fq.selected_answer)
+                parts.push(`Selected:${fq.selected_answer}`);
+              return parts.join(" | ");
+            }
+            if (typeof fq === "string") return fq;
+            return "";
+          })
+          .filter(Boolean)
+          .join("; ")
+      : "";
+    const customQ = intent.custom_question || "";
+    // Default to 72 hours to improve recall; even if intent passed 24h, prefer 72h
+    const timeframe =
+      intent.timeframe === "1week"
+        ? "last 7 days"
+        : intent.timeframe === "1month"
+        ? "last 30 days"
+        : "last 72 hours";
+
+    let sentence = `Find latest ${category}`;
+    if (sub) sentence += ` about ${sub}`;
+    if (followups) sentence += `, considering: ${followups}`;
+    if (customQ) sentence += `, and also: ${customQ}`;
+    sentence += `, strictly in the ${timeframe}.`;
+    return sentence;
+  }
+
+  _buildPrompt(intent) {
+    const category = intent.category || intent.topic || "General";
+    const sub = Array.isArray(intent.subcategory)
+      ? intent.subcategory.filter(Boolean).join(", ")
+      : intent.subcategory || "";
+    const customQ = intent.custom_question || "";
+    const timeframe = intent.timeframe || "3days";
+    const followupsRaw = Array.isArray(intent.followup_questions)
+      ? intent.followup_questions
+          .map((fq) => {
+            if (fq && typeof fq === "object") {
+              const q = fq.question || "Follow-up";
+              const opts =
+                Array.isArray(fq.options) && fq.options.length
+                  ? fq.options.join(", ")
+                  : "None";
+              const sel = fq.selected_answer || "None";
+              return `Q: ${q}\nOptions: ${opts}\nSelected: ${sel}`;
+            }
+            if (typeof fq === "string") {
+              return `Q: ${fq}\nOptions: None\nSelected: None`;
+            }
+            return "";
+          })
+          .filter(Boolean)
+          .join("\n\n")
+      : "None";
+
+    const searchQuery = this._buildSearchQuery(intent);
+
+    return `You are fetching news articles for “Naarad,” an AI-powered personal update assistant. 
+Naarad filters the internet, finds only meaningful and relevant updates based on a user’s interests, 
+and delivers short, personalized summaries on WhatsApp. 
+Naarad’s goal is to send only high-signal, noise-free updates that match exactly what the user cares about.
+
+Below is the complete context about the user’s preferences. 
+This includes the category, subcategory, all follow-up questions, all available options, 
+and the exact selections the user made. 
+Use ALL of this information to determine what the user actually wants updates about.
+
+USER PREFERENCES (FULL STRUCTURE EXAMPLE):
+
+- Category: ${category}
+- Subcategory: ${sub || "None"}
+- Follow-up details (question → options → selected):
+${followupsRaw || "None"}
+- Custom question: ${customQ || "None"}
+ Intent summary: ${intent.intent_summary || "None"}
+
+(IMPORTANT: In the actual request, all questions, all options, and all user selections for the selected subcategory will be inserted here exactly in this structure.)
+
+Your task:
+1. Fetch the MOST relevant, meaningful, and high-quality news articles based on the user’s true interests.
+2. Articles MUST be recent — published within the last 3 days.
+3. Prefer credible reporting over viral or low-quality content.
+4. Avoid generic or broad news unless the user explicitly selected broad preferences.
+5. Prioritize articles that contain strong updates, discoveries, or meaningful insights.
+6. Avoid press releases, low-value blogs, SEO spam, AI-generated junk, filler content.
+7. Return ONLY the full original article text in JSON format.
+
+Output Format (strict):
+* Return a JSON array.
+* Each array element MUST contain exactly one field: "content".
+* "content" must be the FULL article text exactly as published.
+* Do NOT include titles, URLs, summaries, metadata, source names, timestamps, explanations, or commentary.
+
+Example:
+[
+  { "content": "FULL ARTICLE TEXT HERE..." },
+  { "content": "FULL ARTICLE TEXT HERE..." }
+]
+
+Important Notes:
+* Do NOT add your own summarization or interpretation.
+* Do NOT include your reasoning or analysis.
+* Do NOT return anything except the JSON array.
+* Return 1–3 high-quality, deeply relevant articles.
+
+Now fetch the best possible articles as per the above instructions.`;
+  }
+
+  // ------------------------------------------------------------
+  // MAIN FUNCTION — FETCH NEWS FROM PERPLEXITY
+  // ------------------------------------------------------------
+
   async fetchNews(intent) {
     try {
-      // Validate intent
-      if (!intent) {
-        throw new Error("Intent is required");
-      }
+      if (!intent) throw new Error("Intent is required");
 
-      const { perplexity_query, perplexity_prompt } = intent;
+      // Normalize follow-up questions array
+      intent.followup_questions =
+        intent.followup_questions && Array.isArray(intent.followup_questions)
+          ? intent.followup_questions
+          : [];
 
-      if (!perplexity_prompt || !perplexity_query) {
-        throw new Error(
-          "Intent must include perplexity_prompt and perplexity_query"
-        );
-      }
+      const searchQuery = this._buildSearchQuery(intent);
 
-      // Build system message
       const systemMessage = {
         role: "system",
         content:
-          "You are Naarad AI News Fetcher — your ONLY job is to fetch real, factual, full article text from credible news sources without rewriting, summarizing, shortening, or inventing content.",
+          "You are Naarad AI News Fetcher — produce factual, premium-quality news briefings with zero hallucinations.",
       };
 
-      // Build user message
+      // Build prompt in PerplexityNewsFetcher (always built here, not from Gemini)
+      const prompt = this._buildPrompt(intent);
+
       const userMessage = {
         role: "user",
-        content: `SERP Query:\n${perplexity_query}\n\nInstruction:\n${perplexity_prompt}\n\nReturn ONLY valid JSON as a list (max 4 items).\nEach item MUST follow exactly this structure:\n{\n  "article": "<full accurate article text>"\n}\n\nStrict rules for the article:\n- Must be FULL article text, not a summary\n- Must contain full reporting context and progression\n- Must be based only on real, verifiable news sources\n- Must NOT be generated, imagined, inferred, or assumed\n- Must NOT shorten or compress content\n- Must NOT include titles, headlines, bullet points, or formatting\n- Must NOT include opinions, analysis, commentary, marketing tone, or emojis\n- Must be purely factual reporting\n\nReturn nothing except the JSON.`,
+        content: `SERP QUERY:\n${searchQuery}\n\n${prompt}`,
       };
 
-      // Build request payload
       const payload = {
         model: this.model,
         messages: [systemMessage, userMessage],
-        temperature: 0.1, // Low temperature for factual accuracy
+        temperature: 0.1,
         top_p: 0.8,
       };
 
-      // Make API request
-      const response = await this.client.post(this.apiEndpoint, payload);
+      // Print prompt being sent to Perplexity
+      console.log("\n" + "=".repeat(80));
+      console.log("📤 PROMPT BEING SENT TO PERPLEXITY");
+      console.log("=".repeat(80));
+      console.log("\n🔹 SERP QUERY:");
+      console.log(searchQuery);
+      console.log("\n🔹 FULL PROMPT:");
+      console.log("-".repeat(80));
+      console.log(userMessage.content);
+      console.log("-".repeat(80));
+      console.log("Payload summary:", {
+        model: payload.model,
+        temperature: payload.temperature,
+        top_p: payload.top_p,
+        system_len: systemMessage.content.length,
+        user_len: userMessage.content.length,
+      });
 
-      // Extract content
+      const response = await this.client.post("/chat/completions", payload);
+
       const content = this._extractContent(response);
-
-      // Log content for debugging (first 1000 chars)
-      console.log(
-        "Perplexity response content preview:",
-        content.substring(0, 1000)
-      );
-
-      // Parse articles
       const articles = this._parseArticles(content);
 
-      // Log parsed articles count
-      console.log(
-        `Parsed ${articles.length} articles from Perplexity response`
-      );
-
-      // Return payload
       return {
-        query: perplexity_query,
-        articles: articles,
-        raw_response: response.data,
+        query: searchQuery,
+        prompt,
+        intent_summary: intent.intent_summary || null,
+        articles,
+        raw: response.data,
       };
-    } catch (error) {
-      console.error("Perplexity news fetch error:", error);
-
-      // Handle HTTP errors
-      if (error.response) {
-        const status = error.response.status;
-        const statusText = error.response.statusText;
-
-        console.error("Perplexity API error:", {
-          status: status,
-          statusText: statusText,
-          data: error.response.data,
-        });
-
-        if (status === 401) {
-          throw new Error(
-            "Perplexity API authentication failed. Please check your PERPLEXITY_API_KEY in .env file. The API key should be valid and start with 'pplx-'."
-          );
-        }
-
-        throw new Error(
-          `Perplexity API error: ${status} ${statusText} - ${JSON.stringify(
-            error.response.data
-          )}`
-        );
-      }
-
-      // Re-throw validation errors
-      if (
-        error.message.includes("required") ||
-        error.message.includes("must include")
-      ) {
-        throw error;
-      }
-
-      // Wrap other errors
-      throw new Error(`Failed to fetch news from Perplexity: ${error.message}`);
+    } catch (err) {
+      console.error("Perplexity Error:", err);
+      throw new Error("Failed to fetch news from Perplexity: " + err.message);
     }
   }
 }

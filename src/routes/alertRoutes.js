@@ -26,6 +26,7 @@ const {
  * Note: This route must come before /:user_id to avoid route conflicts
  */
 router.post("/parse-intent", parseAlertIntent);
+router.get("/parse-intent", parseAlertIntent);
 
 /**
  * @route   POST /alerts/
