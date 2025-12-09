@@ -250,6 +250,54 @@ const pausedAlertById = async (req, res) => {
 };
 
 /**
+ * Activate alert (set is_active to true)
+ * PUT /alerts/:user_id/:alert_id/activate
+ */
+const activateAlertById = async (req, res) => {
+  try {
+    const { user_id, alert_id } = req.params;
+
+    const alert = await Alert.findOne({
+      alert_id: alert_id,
+      user_id: user_id,
+    });
+
+    if (!alert) {
+      return res.status(404).json({
+        success: false,
+        message: "Alert not found",
+      });
+    }
+
+    const updatedAlert = await Alert.findOneAndUpdate(
+      { alert_id: alert_id, user_id: user_id },
+      { is_active: true },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        alert_id: updatedAlert.alert_id,
+        user_id: updatedAlert.user_id,
+        main_category: updatedAlert.main_category,
+        sub_categories: updatedAlert.sub_categories,
+        followup_questions: updatedAlert.followup_questions,
+        custom_question: updatedAlert.custom_question,
+        is_active: updatedAlert.is_active,
+      },
+    });
+  } catch (error) {
+    console.error("Activate alert error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+/**
  * Update alert schedule
  * PUT /alerts/:user_id/:alert_id/schedule
  */
@@ -353,6 +401,7 @@ module.exports = {
   getScheduledAlerts,
   updateAlertById,
   pausedAlertById,
+  activateAlertById,
   updateAlertSchedule,
   deleteAlertById,
 };

@@ -6,6 +6,7 @@ const {
   getScheduledAlerts,
   updateAlertById,
   pausedAlertById,
+  activateAlertById,
   updateAlertSchedule,
   deleteAlertById,
 } = require("../controllers/alertController");
@@ -78,6 +79,18 @@ router.put(
   validateParams,
   handleValidationErrors,
   pausedAlertById
+);
+
+/**
+ * @route   PUT /alerts/:user_id/:alert_id/activate
+ * @desc    Activate alert (set is_active to true)
+ * @access  Public
+ */
+router.put(
+  "/:user_id/:alert_id/activate",
+  validateParams,
+  handleValidationErrors,
+  activateAlertById
 );
 
 /**
