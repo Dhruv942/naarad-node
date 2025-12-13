@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const Alert = require("../models/Alert");
+const cronService = require("../services/cronService");
 
 /**
  * Create a new alert
@@ -14,6 +15,17 @@ const createAlert = async (req, res) => {
       followup_questions,
       custom_question,
     } = req.body;
+
+    // Check if this is the user's first alert
+    const existingAlertsCount = await Alert.countDocuments({
+      user_id: user_id,
+    });
+    const isFirstAlert = existingAlertsCount === 0;
+
+    console.log(`[ALERT][CREATE] Creating alert for user ${user_id}:`, {
+      isFirstAlert,
+      existingAlertsCount,
+    });
 
     // Create new alert with defaults
     const newAlert = new Alert({
@@ -38,6 +50,53 @@ const createAlert = async (req, res) => {
 
     const savedAlert = await newAlert.save();
 
+    // If this is the first alert, process it immediately
+    if (isFirstAlert) {
+      console.log(
+        `[ALERT][CREATE] First alert detected! Processing immediately for user ${user_id}`
+      );
+
+      // Process in background (don't block response)
+      setImmediate(async () => {
+        try {
+          const alertForProcessing = {
+            alert_id: savedAlert.alert_id,
+            user_id: savedAlert.user_id,
+            main_category: savedAlert.main_category,
+            sub_categories: savedAlert.sub_categories,
+            followup_questions: savedAlert.followup_questions,
+            custom_question: savedAlert.custom_question,
+          };
+
+          console.log(
+            `[ALERT][CREATE][IMMEDIATE] Starting immediate processing for alert ${savedAlert.alert_id}`
+          );
+
+          const result = await cronService.processAlert(alertForProcessing);
+
+          console.log(
+            `[ALERT][CREATE][IMMEDIATE] Immediate processing completed:`,
+            {
+              alert_id: savedAlert.alert_id,
+              status: result.status,
+              reason: result.reason || "N/A",
+            }
+          );
+        } catch (immediateError) {
+          console.error(
+            `[ALERT][CREATE][IMMEDIATE] Error in immediate processing:`,
+            immediateError.message
+          );
+        }
+      });
+    } else {
+      console.log(
+        `[ALERT][CREATE] Not first alert (count: ${
+          existingAlertsCount + 1
+        }). Will be processed by cron job.`
+      );
+    }
+
     return res.status(201).json({
       success: true,
       data: {
@@ -49,6 +108,9 @@ const createAlert = async (req, res) => {
         custom_question: savedAlert.custom_question,
         is_active: savedAlert.is_active,
       },
+      message: isFirstAlert
+        ? "Alert created successfully! Your first news update is being sent now."
+        : "Alert created successfully! You will receive updates via cron job.",
     });
   } catch (error) {
     console.error("Create alert error:", error);

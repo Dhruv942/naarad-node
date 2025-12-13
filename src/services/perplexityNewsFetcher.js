@@ -65,12 +65,32 @@ class PerplexityNewsFetcher {
     try {
       parsed = JSON.parse(extracted);
     } catch {
-      // If JSON parse fails, log and return empty to avoid hard failures
+      // If JSON parse fails, fall back to wrapping the raw text as one article.
+      // Also strip leading/trailing brackets that sometimes appear in Perplexity outputs.
+      const raw = this._stripCodeFences(content).trim();
+      const fallback = raw
+        .replace(/^\s*\[\s*/, "")
+        .replace(/\]\s*$/, "")
+        .trim();
+
+      if (!fallback) {
+        console.warn("Perplexity returned invalid JSON and empty content");
+        return [];
+      }
+
       console.warn(
-        "Perplexity returned invalid JSON. Content preview:",
+        "Perplexity returned invalid JSON. Using raw content as article. Preview:",
         content.substring(0, 500)
       );
-      return [];
+      return [
+        {
+          article: fallback,
+          article_hash: crypto
+            .createHash("sha256")
+            .update(fallback)
+            .digest("hex"),
+        },
+      ];
     }
 
     const items = Array.isArray(parsed) ? parsed : [parsed];
@@ -87,6 +107,26 @@ class PerplexityNewsFetcher {
         };
       })
       .filter(Boolean);
+
+    if (articles.length === 0) {
+      // Last-resort fallback: treat the whole content as one article
+      const raw = this._stripCodeFences(content)
+        .replace(/^\s*\[\s*/, "")
+        .replace(/\]\s*$/, "")
+        .trim();
+
+      if (!raw) {
+        console.warn("Perplexity returned no usable article content");
+        return [];
+      }
+
+      return [
+        {
+          article: raw,
+          article_hash: crypto.createHash("sha256").update(raw).digest("hex"),
+        },
+      ];
+    }
 
     return articles.slice(0, 4);
   }
@@ -105,8 +145,9 @@ class PerplexityNewsFetcher {
     const hasNoise = (text) =>
       typeof text === "string" && text.includes("[object Object]");
 
-    if (summary && !hasNoise(summary)) return summary;
-    if (perplexityQuery && !hasNoise(perplexityQuery)) return perplexityQuery;
+    const summaryClean = summary && !hasNoise(summary) ? summary : "";
+    const perplexityClean =
+      perplexityQuery && !hasNoise(perplexityQuery) ? perplexityQuery : "";
 
     // Rebuild a clean sentence
     const category = intent.category || intent.topic || "news";
@@ -139,6 +180,8 @@ class PerplexityNewsFetcher {
         ? "last 7 days"
         : intent.timeframe === "1month"
         ? "last 30 days"
+        : intent.timeframe === "24hours"
+        ? "last 24 hours"
         : "last 72 hours";
 
     let sentence = `Find latest ${category}`;
@@ -146,6 +189,12 @@ class PerplexityNewsFetcher {
     if (followups) sentence += `, considering: ${followups}`;
     if (customQ) sentence += `, and also: ${customQ}`;
     sentence += `, strictly in the ${timeframe}.`;
+
+    // Prefer intent summary (more precise), but append structured context for recall.
+    if (summaryClean) return `${summaryClean}. ${sentence}`;
+
+    if (perplexityClean) return perplexityClean;
+
     return sentence;
   }
 
