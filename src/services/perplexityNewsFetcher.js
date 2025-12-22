@@ -41,10 +41,46 @@ class PerplexityNewsFetcher {
   }
 
   _extractJSON(text) {
-    const arrayMatch = text.match(/\[[\s\S]*?\]/);
-    if (arrayMatch) return arrayMatch[0];
+    // Try to find complete JSON array (greedy match to get full content)
+    // Match from first [ to last ] (handles nested arrays/objects)
+    const arrayStart = text.indexOf("[");
+    if (arrayStart !== -1) {
+      let depth = 0;
+      let inString = false;
+      let escapeNext = false;
 
-    const objMatch = text.match(/\{[\s\S]*?\}/);
+      for (let i = arrayStart; i < text.length; i++) {
+        const char = text[i];
+
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+
+        if (char === "\\") {
+          escapeNext = true;
+          continue;
+        }
+
+        if (char === '"' && !escapeNext) {
+          inString = !inString;
+          continue;
+        }
+
+        if (!inString) {
+          if (char === "[") depth++;
+          if (char === "]") {
+            depth--;
+            if (depth === 0) {
+              return text.substring(arrayStart, i + 1);
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback: try simple object match
+    const objMatch = text.match(/\{[\s\S]*\}/);
     if (objMatch) return objMatch[0];
 
     return text;
@@ -261,7 +297,8 @@ Your task:
 Output Format (strict):
 * Return a JSON array.
 * Each array element MUST contain exactly one field: "content".
-* "content" must be the FULL article text exactly as published.
+* "content" must be the COMPLETE, FULL article text exactly as published - DO NOT truncate or cut off mid-sentence.
+* Include the ENTIRE article from start to finish - no partial content, no "...", no incomplete sentences.
 * Do NOT include titles, URLs, summaries, metadata, source names, timestamps, explanations, or commentary.
 
 Example:
@@ -314,6 +351,7 @@ Now fetch the best possible articles as per the above instructions.`;
         messages: [systemMessage, userMessage],
         temperature: 0.1,
         top_p: 0.8,
+        max_tokens: 8000, // Allow longer responses to get complete articles
       };
 
       // Print prompt being sent to Perplexity
@@ -337,7 +375,36 @@ Now fetch the best possible articles as per the above instructions.`;
       const response = await this.client.post("/chat/completions", payload);
 
       const content = this._extractContent(response);
+
+      // Log content length to debug truncation issues
+      console.log("\n" + "=".repeat(80));
+      console.log("📥 PERPLEXITY RESPONSE");
+      console.log("=".repeat(80));
+      console.log("Content length:", content.length);
+      console.log(
+        "Content preview (first 500 chars):",
+        content.substring(0, 500)
+      );
+      console.log(
+        "Content preview (last 500 chars):",
+        content.substring(Math.max(0, content.length - 500))
+      );
+
       const articles = this._parseArticles(content);
+
+      // Log parsed articles info
+      console.log("\n📊 PARSED ARTICLES:");
+      console.log("Article count:", articles.length);
+      articles.forEach((article, idx) => {
+        console.log(`Article ${idx + 1} length:`, article.article?.length || 0);
+        if (article.article) {
+          console.log(
+            `Article ${idx + 1} preview:`,
+            article.article.substring(0, 200)
+          );
+        }
+      });
+      console.log("=".repeat(80) + "\n");
 
       return {
         query: searchQuery,

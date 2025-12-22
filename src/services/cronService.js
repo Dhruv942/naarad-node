@@ -10,7 +10,7 @@ class CronService {
   constructor() {
     this.isRunning = false;
     this.lastRun = null;
-    this.cronInterval = process.env.CRON_INTERVAL || "0 */6 * * *"; // Default: every 6 hours
+    this.cronInterval = process.env.CRON_INTERVAL || "0 0 * * *"; // Default: every 24 hours (daily at midnight)
     this.cronJob = null;
   }
 
@@ -85,8 +85,12 @@ class CronService {
       const newsPayload = await fetcher.fetchNews(intent);
       const rawArticles = newsPayload.articles || [];
 
+      console.log(
+        `\n[CRON][ALERT] 📰 Perplexity returned ${rawArticles.length} raw articles`
+      );
+
       if (rawArticles.length === 0) {
-        console.log(`[CRON][ALERT] No articles found for alert ${alert_id}`);
+        console.log(`[CRON][ALERT] ⚠️ No articles found for alert ${alert_id}`);
         return {
           alert_id,
           user_id,
@@ -96,6 +100,26 @@ class CronService {
       }
 
       // Step 4: Format articles
+      console.log(
+        `\n[CRON][ALERT] 🎨 Starting article formatting with gatekeeping...`
+      );
+      console.log(`[CRON][ALERT] AlertIntent data for gatekeeping:`);
+      console.log(`  - Intent Summary: ${alertIntent.intent_summary || "N/A"}`);
+      console.log(`  - Category: ${alertIntent.category || "N/A"}`);
+      console.log(
+        `  - Subcategory: ${JSON.stringify(alertIntent.subcategory || [])}`
+      );
+      console.log(
+        `  - Custom Question: ${alertIntent.custom_question || "N/A"}`
+      );
+      console.log(
+        `  - Follow-up Questions: ${
+          Array.isArray(alertIntent.followup_questions)
+            ? alertIntent.followup_questions.length
+            : 0
+        }`
+      );
+
       const formatter = new ArticleFormatter(3);
       const userIntentForFormatting = {
         topic: alertIntent.topic,
@@ -103,12 +127,25 @@ class CronService {
         intent_summary: alertIntent.intent_summary,
         subcategory: alertIntent.subcategory || [],
         followup_questions: alertIntent.followup_questions || [],
+        custom_question: alertIntent.custom_question || "",
         timeframe: alertIntent.timeframe,
+        // Pass full alertIntent for gatekeeping rating
+        alertIntent: {
+          intent_summary: alertIntent.intent_summary,
+          category: alertIntent.category,
+          subcategory: alertIntent.subcategory || [],
+          followup_questions: alertIntent.followup_questions || [],
+          custom_question: alertIntent.custom_question || "",
+        },
       };
 
       const formattedArticles = await formatter.formatArticles(
         rawArticles,
         userIntentForFormatting
+      );
+
+      console.log(
+        `\n[CRON][ALERT] ✅ Formatting complete: ${formattedArticles.length} articles passed all checks`
       );
 
       if (formattedArticles.length === 0) {

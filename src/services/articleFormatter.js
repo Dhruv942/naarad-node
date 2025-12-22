@@ -211,6 +211,162 @@ ${articleForPrompt}
   }
 
   /**
+   * Build rating prompt for raw articles (before formatting)
+   * Dynamic prompt based on user preferences (category, subcategory, follow-up questions, custom question)
+   */
+  _buildArticleRatingPrompt(articleText, alertIntent) {
+    // Build dynamic prompt
+    let prompt = `You are Naarad, an intelligent news curation and relevance-rating engine.\n\n`;
+    prompt += `Goal:\n`;
+    prompt += `Determine how relevant a given news article is for a user based on their explicit preferences, and assign a single relevance rating.\n\n`;
+
+    prompt += `🔹 User Preference Context\n\n`;
+
+    // Category
+    if (alertIntent?.category) {
+      prompt += `Category: ${alertIntent.category}\n`;
+    }
+
+    // Subcategory
+    if (
+      alertIntent?.subcategory &&
+      Array.isArray(alertIntent.subcategory) &&
+      alertIntent.subcategory.length > 0
+    ) {
+      prompt += `Subcategory: ${alertIntent.subcategory
+        .filter(Boolean)
+        .join(", ")}\n`;
+    }
+
+    // Follow-up Questions
+    if (
+      alertIntent?.followup_questions &&
+      Array.isArray(alertIntent.followup_questions) &&
+      alertIntent.followup_questions.length > 0
+    ) {
+      prompt += `\nFollow-up Questions & Selections:\n`;
+      alertIntent.followup_questions.forEach((fq, idx) => {
+        if (fq && typeof fq === "object") {
+          prompt += `${idx + 1}. Question: ${fq.question || "N/A"}\n`;
+          if (Array.isArray(fq.options) && fq.options.length > 0) {
+            prompt += `   Options: ${fq.options.join(", ")}\n`;
+          }
+          prompt += `   Selected Answer: ${fq.selected_answer || "N/A"}\n\n`;
+        } else if (typeof fq === "string") {
+          prompt += `${idx + 1}. ${fq}\n\n`;
+        }
+      });
+    }
+
+    // Custom Question
+    if (alertIntent?.custom_question) {
+      prompt += `Custom Question/Interests: ${alertIntent.custom_question}\n`;
+    }
+
+    // Intent Summary (if available)
+    if (alertIntent?.intent_summary) {
+      prompt += `\nIntent Summary: ${alertIntent.intent_summary}\n`;
+    }
+
+    prompt += `\n🔹 Instructions\n\n`;
+    prompt += `1. Read the entire article carefully.\n`;
+    prompt += `2. Evaluate alignment with the user's preferences (category, subcategory, follow-up question selections, and custom question).\n`;
+    prompt += `3. Consider if the article is "Interesting Trivia" - fascinating topics, techc\n`;
+    prompt += `4. Rate the article on a scale of 1 to 10.\n`;
+    prompt += `5. Justify the rating using clear, concise reasoning.\n`;
+    prompt += `6. Do not assume or fabricate information.\n\n`;
+
+    prompt += `🔹 Scoring Logic (Internal – do not expose)\n\n`;
+    prompt += `- Strong alignment with category and subcategory increases score.\n`;
+    prompt += `- Match with follow-up question selections significantly boosts score.\n`;
+    prompt += `- Relevance to custom question/interests adds value.\n`;
+    prompt += `- Detailed information, stats, or key developments increase relevance.\n`;
+    prompt += `- Interesting Trivia: Articles about interesting/fascinating topics, tech launches (like AI models, new products), discoveries, or trivia-worthy news should be rated highly if they match user interests.\n`;
+    prompt += `  Examples: "Google Gemini model 3 launches", "New AI breakthrough", "Interesting scientific discovery", etc.\n`;
+    prompt += `- Absence of these elements lowers the score proportionally.\n`;
+    prompt += `- Only articles with rating >= 9 will be selected.\n\n`;
+
+    prompt += `\nRAW ARTICLE TO RATE:\n${articleText.substring(0, 2000)}\n\n`;
+
+    prompt += `Return ONLY valid JSON:\n`;
+    prompt += `{\n`;
+    prompt += `  "rating": <number 1-10>,\n`;
+    prompt += `  "reason": "<brief explanation of rating>"\n`;
+    prompt += `}\n`;
+
+    return prompt;
+  }
+
+  /**
+   * Rate raw article before formatting (gatekeeping)
+   * Returns rating 0-10, only proceed if >= 9
+   */
+  async _rateArticleBeforeFormatting(articleText, alertIntent) {
+    try {
+      if (!articleText || articleText.trim().length === 0) {
+        return {
+          rating: 0,
+          reason: "Empty article text",
+          shouldProceed: false,
+        };
+      }
+
+      if (!alertIntent) {
+        return {
+          rating: 10,
+          reason: "No intent to compare against",
+          shouldProceed: true,
+        };
+      }
+
+      const prompt = this._buildArticleRatingPrompt(articleText, alertIntent);
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+
+      if (!text || text.trim().length === 0) {
+        return {
+          rating: 10,
+          reason: "Rating service unavailable",
+          shouldProceed: true,
+        };
+      }
+
+      try {
+        const cleanedText = text
+          .replace(/```json\n?/gi, "")
+          .replace(/```\n?/g, "")
+          .trim();
+
+        const parsed = JSON.parse(cleanedText);
+        const rating = typeof parsed.rating === "number" ? parsed.rating : 0;
+        const reason = parsed.reason || "No reason provided";
+        const shouldProceed = rating >= 9;
+
+        return {
+          rating,
+          reason,
+          shouldProceed,
+        };
+      } catch (parseError) {
+        // Fail open - allow article if parsing fails
+        return {
+          rating: 10,
+          reason: "Rating parse error",
+          shouldProceed: true,
+        };
+      }
+    } catch (error) {
+      // Fail open - allow article on error
+      return {
+        rating: 10,
+        reason: "Rating service error",
+        shouldProceed: true,
+      };
+    }
+  }
+
+  /**
    * Build gatekeeping prompt
    */
   _buildGatekeepingPrompt(formattedArticles, userIntent) {
@@ -341,6 +497,32 @@ ${articleForPrompt}
           continue;
         }
 
+        // NEW GATEKEEPING: Rate article before formatting
+        // Only proceed if rating >= 9
+        if (userIntent && userIntent.alertIntent) {
+          const ratingResult = await this._rateArticleBeforeFormatting(
+            articleText,
+            userIntent.alertIntent
+          );
+
+          if (!ratingResult.shouldProceed) {
+            // Single console explaining why article was not selected
+            console.log(
+              `\n[GATEKEEPING] ❌ ARTICLE REJECTED - Rating: ${
+                ratingResult.rating
+              }/10 (Required: >= 9) | Reason: ${
+                ratingResult.reason
+              } | Category: ${
+                userIntent.alertIntent.category || "N/A"
+              } | Subcategory: ${JSON.stringify(
+                userIntent.alertIntent.subcategory || []
+              )} | Intent: ${userIntent.alertIntent.intent_summary || "N/A"}\n`
+            );
+
+            continue; // Skip this article, don't format it
+          }
+        }
+
         const formatted = await this._generateWithGemini(
           articleText,
           userIntent
@@ -398,7 +580,7 @@ ${articleForPrompt}
 
       return finalArticles;
     } catch (error) {
-      console.error("Format articles error:", error);
+      console.error("[ARTICLE_FORMATTER] Error:", error.message);
       return [];
     }
   }

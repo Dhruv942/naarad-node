@@ -63,8 +63,17 @@ const getNewsForAlert = async (req, res) => {
 
     // Get raw articles
     const rawArticles = newsPayload.articles || [];
+    console.log(`\n[NEWS][CONTROLLER] 📰 Perplexity returned ${rawArticles.length} raw articles`);
 
     // Format articles using ArticleFormatter
+    console.log(`\n[NEWS][CONTROLLER] 🎨 Starting article formatting with gatekeeping...`);
+    console.log(`[NEWS][CONTROLLER] AlertIntent data for gatekeeping:`);
+    console.log(`  - Intent Summary: ${alertIntent.intent_summary || "N/A"}`);
+    console.log(`  - Category: ${alertIntent.category || "N/A"}`);
+    console.log(`  - Subcategory: ${JSON.stringify(alertIntent.subcategory || [])}`);
+    console.log(`  - Custom Question: ${alertIntent.custom_question || "N/A"}`);
+    console.log(`  - Follow-up Questions: ${Array.isArray(alertIntent.followup_questions) ? alertIntent.followup_questions.length : 0}`);
+
     const formatter = new ArticleFormatter(3);
     const userIntentForFormatting = {
       topic: alertIntent.topic,
@@ -72,13 +81,24 @@ const getNewsForAlert = async (req, res) => {
       intent_summary: alertIntent.intent_summary,
       subcategory: alertIntent.subcategory || [],
       followup_questions: alertIntent.followup_questions || [],
+      custom_question: alertIntent.custom_question || "",
       timeframe: alertIntent.timeframe,
+      // Pass full alertIntent for gatekeeping rating
+      alertIntent: {
+        intent_summary: alertIntent.intent_summary,
+        category: alertIntent.category,
+        subcategory: alertIntent.subcategory || [],
+        followup_questions: alertIntent.followup_questions || [],
+        custom_question: alertIntent.custom_question || "",
+      },
     };
 
     const formattedArticles = await formatter.formatArticles(
       rawArticles,
       userIntentForFormatting
     );
+
+    console.log(`\n[NEWS][CONTROLLER] ✅ Formatting complete: ${formattedArticles.length} articles passed all checks`);
 
     // Optionally send WATI notification if user_id and at least one article exist
     let wati_result = null;

@@ -17,11 +17,11 @@ class WatiConfig {
   }
 
   static get TEMPLATE_NAME() {
-    return process.env.WATI_TEMPLATE_NAME || "sports";
+    return process.env.WATI_TEMPLATE_NAME || "new_updated";
   }
 
   static get BROADCAST_NAME() {
-    return process.env.WATI_BROADCAST_NAME || "sports_091120252024";
+    return process.env.WATI_BROADCAST_NAME || "new_updated_221220250942";
   }
 
   static get CHANNEL_NUMBER() {
