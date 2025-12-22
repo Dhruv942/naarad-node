@@ -27,6 +27,38 @@ const createAlert = async (req, res) => {
       existingAlertsCount,
     });
 
+    console.log(`[ALERT][CREATE] Received data:`, {
+      main_category,
+      sub_categories,
+      followup_questions_count: followup_questions?.length || 0,
+      custom_question,
+    });
+
+    // Normalize followup_questions: map 'answers' to 'options' if needed
+    let normalizedFollowupQuestions = null;
+    if (followup_questions && Array.isArray(followup_questions) && followup_questions.length > 0) {
+      console.log(`[ALERT][CREATE] Normalizing followup_questions...`);
+      normalizedFollowupQuestions = followup_questions.map((fq, idx) => {
+        const normalized = {
+          question: fq.question || "",
+          selected_answer: fq.selected_answer || "",
+        };
+        
+        // Map 'answers' to 'options' if 'answers' exists but 'options' doesn't
+        if (fq.answers && Array.isArray(fq.answers) && fq.answers.length > 0) {
+          normalized.options = fq.answers;
+          console.log(`[ALERT][CREATE] Mapped 'answers' to 'options' for question ${idx + 1}:`, fq.answers);
+        } else if (fq.options && Array.isArray(fq.options)) {
+          normalized.options = fq.options;
+        } else {
+          normalized.options = [];
+        }
+        
+        return normalized;
+      });
+      console.log(`[ALERT][CREATE] Normalized followup_questions:`, JSON.stringify(normalizedFollowupQuestions, null, 2));
+    }
+
     // Create new alert with defaults
     const newAlert = new Alert({
       alert_id: uuidv4(),
@@ -34,10 +66,7 @@ const createAlert = async (req, res) => {
       main_category: main_category,
       sub_categories:
         sub_categories && sub_categories.length > 0 ? sub_categories : null,
-      followup_questions:
-        followup_questions && followup_questions.length > 0
-          ? followup_questions
-          : null,
+      followup_questions: normalizedFollowupQuestions,
       custom_question: custom_question || null,
       is_active: true,
       schedule: {
@@ -231,6 +260,25 @@ const updateAlertById = async (req, res) => {
         updateData.followup_questions.length === 0
       ) {
         updateData.followup_questions = null;
+      } else if (Array.isArray(updateData.followup_questions) && updateData.followup_questions.length > 0) {
+        // Normalize followup_questions: map 'answers' to 'options' if needed
+        updateData.followup_questions = updateData.followup_questions.map((fq) => {
+          const normalized = {
+            question: fq.question || "",
+            selected_answer: fq.selected_answer || "",
+          };
+          
+          // Map 'answers' to 'options' if 'answers' exists but 'options' doesn't
+          if (fq.answers && Array.isArray(fq.answers) && fq.answers.length > 0) {
+            normalized.options = fq.answers;
+          } else if (fq.options && Array.isArray(fq.options)) {
+            normalized.options = fq.options;
+          } else {
+            normalized.options = [];
+          }
+          
+          return normalized;
+        });
       }
     }
 
