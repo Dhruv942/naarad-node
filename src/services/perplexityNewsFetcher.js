@@ -298,7 +298,7 @@ ${followupsRaw || "None"}
 (IMPORTANT: In the actual request, all questions, all options, and all user selections for the selected subcategory will be inserted here exactly in this structure.)
 
 Your task:
-1. Fetch the MOST relevant, meaningful, and high-quality news articles based on the user’s true interests.
+1. Fetch the MOST relevant, meaningful, and high-quality news articles based on the user's true interests.
 2. Articles MUST be recent — published within the last 3 days.
 3. Prefer credible reporting over viral or low-quality content.
 4. Avoid generic or broad news unless the user explicitly selected broad preferences.
@@ -306,16 +306,26 @@ Your task:
 6. Avoid press releases, low-value blogs, SEO spam, AI-generated junk, filler content.
 7. Return ONLY the full original article text in JSON format.
 
+CRITICAL: FULL ARTICLE TEXT REQUIRED
+- You MUST fetch and return the COMPLETE, ENTIRE article text from start to finish
+- Do NOT use ellipses (...) or any truncation markers
+- Do NOT summarize, condense, or shorten the article content
+- Do NOT skip any paragraphs, sentences, or sections
+- Include ALL paragraphs, ALL details, ALL quotes, ALL information from the original article
+- If you see "..." in source content, fetch the complete article from the source URL to get the full text
+- The article text must be 100% complete with no missing portions
+
 Output Format (strict):
 Return a JSON array
 
 Each array element MUST contain exactly one field: "content"
 "content" must include:
-The FULL article text (start to finish, uncut)
+The COMPLETE, FULL article text from the source (every paragraph, every sentence, NO truncation, NO ellipses)
 Then a new line
 Then the source link
 Do NOT add extra fields like "source", "url", etc.
-Do NOT truncate content
+Do NOT truncate, summarize, or shorten content in ANY way
+Do NOT use ellipses (...) or "..."
 Do NOT add titles, summaries, metadata, or commentary outside the article
 Example:
 [

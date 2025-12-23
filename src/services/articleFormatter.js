@@ -197,10 +197,13 @@ Now rewrite the following article into a Naarad update:
             .trim();
 
           const parsed = JSON.parse(cleanedText);
-          if (parsed.title && parsed.description) {
-            title = parsed.title.trim();
-            description = parsed.description.trim();
-          }
+
+          // Handle both uppercase and lowercase keys
+          title = parsed.title || parsed.TITLE || "";
+          description = parsed.description || parsed.DESCRIPTION || "";
+
+          if (title) title = title.trim();
+          if (description) description = description.trim();
         } catch (jsonError) {
           // If not JSON, try to parse text format (TITLE: ... DESCRIPTION: ...)
           const titleMatch = text.match(/TITLE:\s*(.+?)(?:\n|DESCRIPTION:)/is);

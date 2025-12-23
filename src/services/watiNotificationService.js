@@ -557,6 +557,24 @@ Return ONLY valid JSON:
         channelNumber,
       });
 
+      // Debug: Log full title and description being sent
+      console.log("\n" + "📤".repeat(40));
+      console.log("[WATI] Full Title & Description being sent:");
+      console.log("📤".repeat(40));
+      console.log("\n📌 FULL TITLE:");
+      console.log("-".repeat(80));
+      console.log(title);
+      console.log(`Title length: ${title.length} characters`);
+      console.log("-".repeat(80));
+      console.log("\n📝 FULL DESCRIPTION:");
+      console.log("-".repeat(80));
+      console.log(description);
+      console.log(`Description length: ${description.length} characters`);
+      console.log("-".repeat(80));
+      console.log("\n📦 PAYLOAD customParams:");
+      console.log(JSON.stringify(payload.receivers[0].customParams, null, 2));
+      console.log("📤".repeat(40) + "\n");
+
       const url = `${this.baseUrl}/api/v1/sendTemplateMessages`;
 
       console.log("[WATI][NEWS] Sending news notification:", {
