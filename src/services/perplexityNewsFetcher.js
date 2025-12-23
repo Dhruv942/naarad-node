@@ -12,6 +12,18 @@ class PerplexityNewsFetcher {
 
     this.apiKey = this.apiKey.trim();
 
+    // Debug: Log API key status (without exposing full key)
+    const keyLength = this.apiKey.length;
+    const keyPreview =
+      this.apiKey.length > 8
+        ? `${this.apiKey.substring(0, 4)}...${this.apiKey.substring(
+            keyLength - 4
+          )}`
+        : "***";
+    console.log(
+      `[PERPLEXITY] API Key loaded: ${keyPreview} (length: ${keyLength})`
+    );
+
     this.client = axios.create({
       baseURL: "https://api.perplexity.ai",
       timeout: 90000,
@@ -295,17 +307,26 @@ Your task:
 7. Return ONLY the full original article text in JSON format.
 
 Output Format (strict):
-* Return a JSON array.
-* Each array element MUST contain exactly one field: "content".
-* "content" must be the COMPLETE, FULL article text exactly as published - DO NOT truncate or cut off mid-sentence.
-* Include the ENTIRE article from start to finish - no partial content, no "...", no incomplete sentences.
-* Do NOT include titles, URLs, summaries, metadata, source names, timestamps, explanations, or commentary.
+Return a JSON array
 
+Each array element MUST contain exactly one field: "content"
+"content" must include:
+The FULL article text (start to finish, uncut)
+Then a new line
+Then the source link
+Do NOT add extra fields like "source", "url", etc.
+Do NOT truncate content
+Do NOT add titles, summaries, metadata, or commentary outside the article
 Example:
 [
-  { "content": "FULL ARTICLE TEXT HERE..." },
-  { "content": "FULL ARTICLE TEXT HERE..." }
+  {
+    "content": "FULL ARTICLE TEXT HERE...\n\nSource: https://example.com/full-article-link"
+  },
+  {
+    "content": "FULL SECOND ARTICLE TEXT HERE...\n\nSource: https://example.com/second-article-link"
+  }
 ]
+
 
 Important Notes:
 * Do NOT add your own summarization or interpretation.
@@ -414,8 +435,32 @@ Now fetch the best possible articles as per the above instructions.`;
         raw: response.data,
       };
     } catch (err) {
-      console.error("Perplexity Error:", err);
-      throw new Error("Failed to fetch news from Perplexity: " + err.message);
+      // Handle 401 Unauthorized specifically
+      if (err.response && err.response.status === 401) {
+        const keyLength = this.apiKey ? this.apiKey.length : 0;
+        const keyPreview =
+          this.apiKey && this.apiKey.length > 8
+            ? `${this.apiKey.substring(0, 4)}...${this.apiKey.substring(
+                keyLength - 4
+              )}`
+            : "NOT_LOADED";
+
+        const errorMsg = `Perplexity API authentication failed (401). API Key Status: ${keyPreview} (length: ${keyLength}). Please verify your PERPLEXITY_API_KEY is valid and not expired.`;
+        console.error("[PERPLEXITY] 401 Error Details:", {
+          status: err.response.status,
+          statusText: err.response.statusText,
+          apiKeyLength: keyLength,
+          apiKeyPreview: keyPreview,
+          responseData: err.response.data,
+        });
+        throw new Error(errorMsg);
+      }
+
+      // Handle other errors
+      console.error("Perplexity Error:", err.message || err);
+      throw new Error(
+        "Failed to fetch news from Perplexity: " + (err.message || err)
+      );
     }
   }
 }

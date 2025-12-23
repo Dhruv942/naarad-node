@@ -1,6 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const GeminiConfig = require("../config/geminiConfig");
 const ImageSearchService = require("./imageSearchService");
+const Article = require("../models/Article");
 
 class ArticleFormatter {
   constructor(maxArticles = 3, model = null, maxPromptChars = 1500) {
@@ -13,7 +14,6 @@ class ArticleFormatter {
     try {
       this.imageSearchService = new ImageSearchService();
     } catch (error) {
-      console.warn("Image search service not available:", error.message);
       this.imageSearchService = null;
     }
 
@@ -83,11 +83,49 @@ class ArticleFormatter {
    * Build formatting prompt
    */
   _buildFormattingPrompt(articleText, userIntent = null) {
-    let prompt = `Rewrite the following full article into a premium "Naarad short update".\n\n`;
+    let prompt = `Rewrite the following full article into an inShorts-style update for "Naarad."
 
-    if (userIntent && userIntent.intent_summary) {
-      prompt += `User Context: ${userIntent.intent_summary}\n\n`;
-    }
+Naarad (context):  
+Naarad is an AI-powered personal update assistant that learns each user’s interests and delivers only high-signal, relevant, and meaningful updates. It filters internet noise and sends short, personalized updates (e.g., to WhatsApp). Naarad prioritizes clarity, factual accuracy, and a noise-free experience.
+
+Task:  
+Rewrite the article below into a compact Naarad update with ONLY two parts: a TITLE and a DESCRIPTION.
+
+OUTPUT RULES — STRICT
+1) TITLE (max 10–12 words)
+   - Create a subtle but strong curiosity gap; make the reader pause.
+   - Tone: calm, smart, premium — not loud or sensational.
+   - Avoid all-caps, exclamation marks, and hypey punctuation.
+   - Use simple English and, where useful, contrast (old vs new, unexpected vs expected).
+   - Do NOT use heavy jargon or marketing fluff. The reader shouldn't feel out of place or overwhelmed.
+   - Aim for an “almost-clickbait” curiosity that remains fully factual and honest.
+
+2) DESCRIPTION (55–75 words)
+   - Crisp, human, conversational.
+   - Focus on ONE single most meaningful or surprising insight from the article.
+   - No list of facts, no full summary — pick the single idea that matters most to the reader.
+   - No corporate tone, no long adjectives, no sensational language.
+   - Should include the numbers if necessary and if it maters to the article
+   - Must read like: “Here’s the one thing you actually want to know.”
+
+GENERAL RULES
+- Do NOT mention the author, publication, or article format (podcast/article).
+- Do NOT add titles, headings, metadata, URLs, or any extra fields.
+- Do NOT summarize everything — select the single strongest angle.
+- Do NOT use exclamation marks, ALL CAPS, or sensational modifiers.
+- Be concise and valuable — the user should feel the time spent reading was worth it.
+
+OUTPUT FORMAT (exact)
+Return ONLY this two-part text in the following structure (no JSON, no extra commentary):
+
+TITLE:
+<one-line title (10–12 words)>
+
+DESCRIPTION:
+<one paragraph, 55–75 words>
+
+Now rewrite the following article into a Naarad update:
+`;
 
     // Truncate if too big
     let articleForPrompt = articleText;
@@ -96,59 +134,7 @@ class ArticleFormatter {
         articleForPrompt.substring(0, this.maxPromptChars) + "...";
     }
 
-    prompt += `
-### TITLE RULES (sexy, modern, premium clickbait)
-- Max 10–12 words.
-- Always start with MATCH RESULT + MARGIN.
-- NEVER begin with a player name.
-- MUST contain a “tension/drama/action” word like:
-  “thriller”, “stunner”, “nail-biter”, “dramatic finish”, “sealed”, “edge”.
-
-- Include:
-  - match result,
-  - margin,
-  - match type/format,
-  - opponent.
-
-
-- Avoid generic headlines like:
-  “India win ODI” or “India beat SA easily”.
-
-- MUST include numbers EXACTLY as they appear.
-- Tone: crisp + high-energy + engaging + modern.
-
-
-Avoid boring titles like:
-- "Match report on India vs Pakistan"
-- "Company announces launch of new product"
-
-### DESCRIPTION RULES (65–85 words)
-- Must read like premium, human written news.
-- Keep the tone punchy, modern and casual.
-- Keep 2–3 key insights, NOT full summary.
-- CRITICAL: Preserve ALL numbers, dates, metrics and special words exactly.
-- Must highlight:
-  - what happened,
-  - why it matters,
-  - what changed or what's next,
-  - any crucial twist or surprise.
-- Include names, scores, rankings, deals, performance details.
-- No corporate style or robotic tone.
-- NO generic template sentences.
-
-### STRICT FORMAT:
-Return ONLY valid JSON:
-{
-  "title": "<sexy crisp short title>",
-  "description": "<modern human 65–85 word summary>"
-}
-
-NO markdown, NO commentary, NO formatting tags.
-Never change or round numbers.
-
-### ARTICLE:
-${articleForPrompt}
-`;
+    prompt += `${articleForPrompt}`;
 
     return prompt;
   }
@@ -160,6 +146,17 @@ ${articleForPrompt}
     try {
       const prompt = this._buildFormattingPrompt(articleText, userIntent);
 
+      // Console log: Full prompt being sent to Gemini
+      console.log("\n" + "🔵".repeat(40));
+      console.log("📤 [GEMINI_FORMAT] Full Prompt being sent to Gemini:");
+      console.log("🔵".repeat(40));
+      console.log("\n📋 COMPLETE PROMPT:");
+      console.log("=".repeat(80));
+      console.log(prompt);
+      console.log("=".repeat(80));
+      console.log(`\nPrompt length: ${prompt.length} characters`);
+      console.log("🔵".repeat(40) + "\n");
+
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
 
@@ -167,45 +164,71 @@ ${articleForPrompt}
       if (response.promptFeedback) {
         const blockReason = response.promptFeedback.blockReason;
         if (blockReason && blockReason !== "BLOCK_REASON_UNSPECIFIED") {
-          console.warn(
-            `Gemini blocked response: ${blockReason}. Using fallback.`
-          );
           return this._fallback(articleText);
         }
       }
 
       const text = response.text();
+
+      // Console log: Raw response from Gemini
+      console.log("\n" + "🟢".repeat(40));
+      console.log("📥 [GEMINI_FORMAT] Raw response received from Gemini:");
+      console.log("🟢".repeat(40));
+      console.log("\n📝 RAW RESPONSE:");
+      console.log("-".repeat(80));
+      console.log(text);
+      console.log("-".repeat(80));
+      console.log("🟢".repeat(40) + "\n");
+
       if (!text || text.trim().length === 0) {
-        console.warn("Empty response from Gemini. Using fallback.");
         return this._fallback(articleText);
       }
 
-      // Parse JSON
+      // Parse response (can be JSON or text format)
       try {
-        const cleanedText = text
-          .replace(/```json\n?/gi, "")
-          .replace(/```\n?/g, "")
-          .trim();
+        let title = "";
+        let description = "";
 
-        const parsed = JSON.parse(cleanedText);
+        // Try to parse as JSON first
+        try {
+          const cleanedText = text
+            .replace(/```json\n?/gi, "")
+            .replace(/```\n?/g, "")
+            .trim();
+
+          const parsed = JSON.parse(cleanedText);
+          if (parsed.title && parsed.description) {
+            title = parsed.title.trim();
+            description = parsed.description.trim();
+          }
+        } catch (jsonError) {
+          // If not JSON, try to parse text format (TITLE: ... DESCRIPTION: ...)
+          const titleMatch = text.match(/TITLE:\s*(.+?)(?:\n|DESCRIPTION:)/is);
+          const descMatch = text.match(
+            /DESCRIPTION:\s*(.+?)(?:\n\n|\nTITLE:|$)/is
+          );
+
+          if (titleMatch) {
+            title = titleMatch[1].trim();
+          }
+          if (descMatch) {
+            description = descMatch[1].trim();
+          }
+        }
 
         // Validate structure
-        if (!parsed.title || !parsed.description) {
-          console.warn("Invalid JSON structure. Using fallback.");
+        if (!title || !description) {
           return this._fallback(articleText);
         }
 
         return {
-          title: parsed.title.trim(),
-          description: parsed.description.trim(),
+          title: title,
+          description: description,
         };
       } catch (parseError) {
-        console.error("JSON parse error:", parseError.message);
-        console.error("Response preview:", text.substring(0, 200));
         return this._fallback(articleText);
       }
     } catch (error) {
-      console.error("Gemini formatting error:", error);
       return this._fallback(articleText);
     }
   }
@@ -419,8 +442,8 @@ ${articleForPrompt}
       const response = await result.response;
 
       const text = response.text();
+
       if (!text || text.trim().length === 0) {
-        console.warn("Empty gatekeeping response. Returning all articles.");
         return formattedArticles.map((article) => ({
           ...article,
           gatekeeper_reason: "Article passed gatekeeping",
@@ -446,7 +469,6 @@ ${articleForPrompt}
 
         return [];
       } catch (parseError) {
-        console.error("Gatekeeping JSON parse error:", parseError.message);
         // Return all articles with default reason
         return formattedArticles.map((article) => ({
           ...article,
@@ -454,12 +476,61 @@ ${articleForPrompt}
         }));
       }
     } catch (error) {
-      console.error("Gatekeeping error:", error);
       // Return all articles on error
       return formattedArticles.map((article) => ({
         ...article,
         gatekeeper_reason: "Article passed gatekeeping",
       }));
+    }
+  }
+
+  /**
+   * Store articles in database
+   * @param {Array} articles - Formatted articles with original_content
+   * @param {Object} userIntent - User intent object with alert_id, user_id, etc.
+   */
+  async _storeArticlesInDatabase(articles, userIntent) {
+    try {
+      const alert_id = userIntent.alert_id || null;
+      const user_id = userIntent.user_id || null;
+
+      if (!alert_id || !user_id) {
+        return;
+      }
+
+      for (const article of articles) {
+        if (!article.article_hash || !article.original_content) {
+          continue;
+        }
+
+        try {
+          const articleData = {
+            alert_id: alert_id,
+            user_id: user_id,
+            article_hash: article.article_hash,
+            content: article.original_content,
+            intent_summary: userIntent.intent_summary || "",
+            category: userIntent.category || "",
+            subcategory: Array.isArray(userIntent.subcategory)
+              ? userIntent.subcategory
+              : [],
+            timeframe: userIntent.timeframe || "",
+            source: "perplexity",
+          };
+
+          // Use findOneAndUpdate with upsert to avoid duplicates
+          await Article.findOneAndUpdate(
+            { alert_id: alert_id, article_hash: article.article_hash },
+            articleData,
+            { upsert: true, new: true }
+          );
+        } catch (storeError) {
+          // Handle duplicate key error gracefully (unique index on alert_id + article_hash)
+          // Silently continue on duplicate or other errors
+        }
+      }
+    } catch (error) {
+      // Silently handle errors
     }
   }
 
@@ -506,19 +577,6 @@ ${articleForPrompt}
           );
 
           if (!ratingResult.shouldProceed) {
-            // Single console explaining why article was not selected
-            console.log(
-              `\n[GATEKEEPING] ❌ ARTICLE REJECTED - Rating: ${
-                ratingResult.rating
-              }/10 (Required: >= 9) | Reason: ${
-                ratingResult.reason
-              } | Category: ${
-                userIntent.alertIntent.category || "N/A"
-              } | Subcategory: ${JSON.stringify(
-                userIntent.alertIntent.subcategory || []
-              )} | Intent: ${userIntent.alertIntent.intent_summary || "N/A"}\n`
-            );
-
             continue; // Skip this article, don't format it
           }
         }
@@ -532,6 +590,8 @@ ${articleForPrompt}
           if (articleHash) {
             formatted.article_hash = articleHash;
           }
+          // Attach original article text (content) for database storage
+          formatted.original_content = articleText;
           // Get image for the article
           if (this.imageSearchService) {
             try {
@@ -547,7 +607,6 @@ ${articleForPrompt}
                 formatted.image_source = imageResult.source;
               }
             } catch (imageError) {
-              console.error("Error fetching image:", imageError);
               // Continue without image
             }
           }
@@ -571,16 +630,30 @@ ${articleForPrompt}
         const originalArticle = formattedArticles.find(
           (a) => a.title === article.title
         );
-        if (originalArticle && originalArticle.image_url) {
-          article.image_url = originalArticle.image_url;
-          article.image_thumbnail = originalArticle.image_thumbnail;
-          article.image_search_query = originalArticle.image_search_query;
+        if (originalArticle) {
+          if (originalArticle.image_url) {
+            article.image_url = originalArticle.image_url;
+            article.image_thumbnail = originalArticle.image_thumbnail;
+            article.image_search_query = originalArticle.image_search_query;
+          }
+          // Preserve original content
+          if (originalArticle.original_content) {
+            article.original_content = originalArticle.original_content;
+          }
+          // Preserve article hash
+          if (originalArticle.article_hash) {
+            article.article_hash = originalArticle.article_hash;
+          }
         }
       });
 
+      // Store articles in database if alert_id and user_id are available
+      if (userIntent && (userIntent.alert_id || userIntent.user_id)) {
+        await this._storeArticlesInDatabase(finalArticles, userIntent);
+      }
+
       return finalArticles;
     } catch (error) {
-      console.error("[ARTICLE_FORMATTER] Error:", error.message);
       return [];
     }
   }

@@ -76,6 +76,8 @@ const getNewsForAlert = async (req, res) => {
 
     const formatter = new ArticleFormatter(3);
     const userIntentForFormatting = {
+      alert_id: alert_id, // Add alert_id for database storage
+      user_id: user_id, // Add user_id for database storage
       topic: alertIntent.topic,
       category: alertIntent.category,
       intent_summary: alertIntent.intent_summary,
