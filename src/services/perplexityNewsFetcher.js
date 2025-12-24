@@ -12,18 +12,6 @@ class PerplexityNewsFetcher {
 
     this.apiKey = this.apiKey.trim();
 
-    // Debug: Log API key status (without exposing full key)
-    const keyLength = this.apiKey.length;
-    const keyPreview =
-      this.apiKey.length > 8
-        ? `${this.apiKey.substring(0, 4)}...${this.apiKey.substring(
-            keyLength - 4
-          )}`
-        : "***";
-    console.log(
-      `[PERPLEXITY] API Key loaded: ${keyPreview} (length: ${keyLength})`
-    );
-
     this.client = axios.create({
       baseURL: "https://api.perplexity.ai",
       timeout: 90000,
@@ -101,7 +89,6 @@ class PerplexityNewsFetcher {
   _parseArticles(content) {
     // If content is missing or not a string, return no articles instead of throwing
     if (!content || typeof content !== "string") {
-      console.warn("Perplexity response missing or not a string");
       return [];
     }
 
@@ -122,14 +109,8 @@ class PerplexityNewsFetcher {
         .trim();
 
       if (!fallback) {
-        console.warn("Perplexity returned invalid JSON and empty content");
         return [];
       }
-
-      console.warn(
-        "Perplexity returned invalid JSON. Using raw content as article. Preview:",
-        content.substring(0, 500)
-      );
       return [
         {
           article: fallback,
@@ -148,7 +129,53 @@ class PerplexityNewsFetcher {
         const text = item.article || item.content || item.text;
         if (!text) return null;
 
-        const clean = text.trim();
+        // Clean the article text - remove unwanted patterns
+        let clean = text.trim();
+
+        // First, protect URLs by temporarily replacing them
+        const urlPlaceholder = "___URL_PLACEHOLDER___";
+        const urls = [];
+        let urlIndex = 0;
+        clean = clean.replace(/https?:\/\/[^\s]+/g, (url) => {
+          urls.push(url);
+          return `${urlPlaceholder}${urlIndex++}`;
+        });
+
+        // Remove unwanted Hindi text artifacts and debugging text
+        clean = clean
+          .replace(/ye\s+becch\s+me/gi, "")
+          .replace(/kyu\s+aa\s+rhe\s+hai/gi, "")
+          .replace(/aisa\s+nahi\s+ana\s+chaihye/gi, "")
+          .replace(/\s+bro\s*$/i, "")
+          // Remove article_hash patterns if they appear in text
+          .replace(/article_hash\s*[:=]\s*[a-f0-9]+/gi, "")
+          // Remove long hex strings that might be hashes mixed in text
+          .replace(/\b[a-f0-9]{32,}\b(?=\s|$)/gi, "")
+          // Remove ellipses - aggressive cleaning
+          // Remove standalone ellipses " ... " or "..."
+          .replace(/\s+\.{2,}\s+/g, " ")
+          .replace(/\s+\.{2,}/g, " ")
+          .replace(/\.{2,}\s+/g, " ")
+          // Remove ellipses after sentences
+          .replace(/([.!?])\s*\.{2,}\s*/g, "$1 ")
+          // Remove ellipses at start/end
+          .replace(/^\.{2,}\s*/g, "")
+          .replace(/\s+\.{2,}$/g, "")
+          // Remove any remaining ellipses
+          .replace(/\.{2,}/g, "")
+          // Normalize whitespace
+          .replace(/\s+/g, " ")
+          .trim();
+
+        // Restore URLs
+        urls.forEach((url, idx) => {
+          clean = clean.replace(`${urlPlaceholder}${idx}`, url);
+        });
+
+        if (!clean || clean.length < 50) {
+          return null; // Skip articles that are too short after cleaning
+        }
+
         return {
           article: clean,
           article_hash: crypto.createHash("sha256").update(clean).digest("hex"),
@@ -164,7 +191,6 @@ class PerplexityNewsFetcher {
         .trim();
 
       if (!raw) {
-        console.warn("Perplexity returned no usable article content");
         return [];
       }
 
@@ -306,14 +332,16 @@ Your task:
 6. Avoid press releases, low-value blogs, SEO spam, AI-generated junk, filler content.
 7. Return ONLY the full original article text in JSON format.
 
-CRITICAL: FULL ARTICLE TEXT REQUIRED
+CRITICAL: FULL ARTICLE TEXT REQUIRED - NO ELLIPSES ALLOWED
 - You MUST fetch and return the COMPLETE, ENTIRE article text from start to finish
-- Do NOT use ellipses (...) or any truncation markers
+- STRICTLY FORBIDDEN: Do NOT use ellipses (...) or any truncation markers like "...", "…", or ".." anywhere in the article text
+- Do NOT use ellipses even if the source article has them - replace them with the actual content or skip them entirely
 - Do NOT summarize, condense, or shorten the article content
 - Do NOT skip any paragraphs, sentences, or sections
 - Include ALL paragraphs, ALL details, ALL quotes, ALL information from the original article
-- If you see "..." in source content, fetch the complete article from the source URL to get the full text
-- The article text must be 100% complete with no missing portions
+- If you see "..." or ellipses in source content, fetch the complete article from the source URL to get the full text
+- Remove ALL ellipses from the article text before returning it
+- The article text must be 100% complete with no missing portions and NO ellipses whatsoever
 
 Output Format (strict):
 Return a JSON array
@@ -321,19 +349,21 @@ Return a JSON array
 Each array element MUST contain exactly one field: "content"
 "content" must include:
 The COMPLETE, FULL article text from the source (every paragraph, every sentence, NO truncation, NO ellipses)
+IMPORTANT: The article text must NOT contain any ellipses (...), truncation markers, or "..." anywhere in the content
+If the source has ellipses, either fetch the full content from the URL or remove the ellipses entirely
 Then a new line
 Then the source link
 Do NOT add extra fields like "source", "url", etc.
 Do NOT truncate, summarize, or shorten content in ANY way
-Do NOT use ellipses (...) or "..."
+STRICTLY FORBIDDEN: Do NOT use ellipses (...) or "..." anywhere in the article text
 Do NOT add titles, summaries, metadata, or commentary outside the article
 Example:
 [
   {
-    "content": "FULL ARTICLE TEXT HERE...\n\nSource: https://example.com/full-article-link"
+    "content": "FULL ARTICLE TEXT HERE - complete article content without any ellipses or truncation\n\nSource: https://example.com/full-article-link"
   },
   {
-    "content": "FULL SECOND ARTICLE TEXT HERE...\n\nSource: https://example.com/second-article-link"
+    "content": "FULL SECOND ARTICLE TEXT HERE - complete article content without any ellipses or truncation\n\nSource: https://example.com/second-article-link"
   }
 ]
 
@@ -385,57 +415,11 @@ Now fetch the best possible articles as per the above instructions.`;
         max_tokens: 8000, // Allow longer responses to get complete articles
       };
 
-      // Print prompt being sent to Perplexity
-      console.log("\n" + "=".repeat(80));
-      console.log("📤 PROMPT BEING SENT TO PERPLEXITY");
-      console.log("=".repeat(80));
-      console.log("\n🔹 SERP QUERY:");
-      console.log(searchQuery);
-      console.log("\n🔹 FULL PROMPT:");
-      console.log("-".repeat(80));
-      console.log(userMessage.content);
-      console.log("-".repeat(80));
-      console.log("Payload summary:", {
-        model: payload.model,
-        temperature: payload.temperature,
-        top_p: payload.top_p,
-        system_len: systemMessage.content.length,
-        user_len: userMessage.content.length,
-      });
-
       const response = await this.client.post("/chat/completions", payload);
 
       const content = this._extractContent(response);
 
-      // Log content length to debug truncation issues
-      console.log("\n" + "=".repeat(80));
-      console.log("📥 PERPLEXITY RESPONSE");
-      console.log("=".repeat(80));
-      console.log("Content length:", content.length);
-      console.log(
-        "Content preview (first 500 chars):",
-        content.substring(0, 500)
-      );
-      console.log(
-        "Content preview (last 500 chars):",
-        content.substring(Math.max(0, content.length - 500))
-      );
-
       const articles = this._parseArticles(content);
-
-      // Log parsed articles info
-      console.log("\n📊 PARSED ARTICLES:");
-      console.log("Article count:", articles.length);
-      articles.forEach((article, idx) => {
-        console.log(`Article ${idx + 1} length:`, article.article?.length || 0);
-        if (article.article) {
-          console.log(
-            `Article ${idx + 1} preview:`,
-            article.article.substring(0, 200)
-          );
-        }
-      });
-      console.log("=".repeat(80) + "\n");
 
       return {
         query: searchQuery,
@@ -456,18 +440,9 @@ Now fetch the best possible articles as per the above instructions.`;
             : "NOT_LOADED";
 
         const errorMsg = `Perplexity API authentication failed (401). API Key Status: ${keyPreview} (length: ${keyLength}). Please verify your PERPLEXITY_API_KEY is valid and not expired.`;
-        console.error("[PERPLEXITY] 401 Error Details:", {
-          status: err.response.status,
-          statusText: err.response.statusText,
-          apiKeyLength: keyLength,
-          apiKeyPreview: keyPreview,
-          responseData: err.response.data,
-        });
         throw new Error(errorMsg);
       }
 
-      // Handle other errors
-      console.error("Perplexity Error:", err.message || err);
       throw new Error(
         "Failed to fetch news from Perplexity: " + (err.message || err)
       );

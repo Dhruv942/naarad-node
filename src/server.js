@@ -23,8 +23,8 @@ app.listen(PORT, () => {
     console.log("[CRON] Cron service started");
     console.log(
       `[CRON] Interval: ${
-        process.env.CRON_INTERVAL || "0 */6 * * *"
-      } (every 6 hours)`
+        process.env.CRON_INTERVAL || "0 9 * * *"
+      } (daily at 9:00 AM)`
     );
   } else {
     console.log(

@@ -10,7 +10,7 @@ class CronService {
   constructor() {
     this.isRunning = false;
     this.lastRun = null;
-    this.cronInterval = process.env.CRON_INTERVAL || "0 0 * * *"; // Default: every 24 hours (daily at midnight)
+    this.cronInterval = process.env.CRON_INTERVAL || "0 9 * * *"; // Default: daily at 9:00 AM
     this.cronJob = null;
   }
 
