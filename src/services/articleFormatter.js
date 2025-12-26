@@ -332,7 +332,7 @@ OUTPUT RULES — STRICT
    - IMPORTANT: Do NOT use Title Case (capitalizing every word's first letter). Use sentence case (only first word capitalized, proper nouns capitalized).
    - Example: "Liverpool's recent form hints at what's next" NOT "Liverpool's Recent Form Hints At What's Next"
 
-2) DESCRIPTION (55–75 words)
+2) DESCRIPTION (65-95 words)
    - Crisp, human, conversational.
    - Focus on ONE single most meaningful or surprising insight from the article.
    - No list of facts, no full summary — pick the single idea that matters most to the reader.
@@ -355,7 +355,7 @@ TITLE:
 <one-line title (10–12 words)>
 
 DESCRIPTION:
-<one paragraph, 55–75 words>
+<one paragraph, 65-95 words>
 
 Now rewrite the following article into a Naarad update:
 `;
