@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate-vapid-keys": "web-push generate-vapid-keys"
   },
   "keywords": [
     "nodejs",
@@ -24,7 +25,9 @@
     "express-validator": "^7.0.1",
     "mongoose": "^8.0.3",
     "node-cron": "^4.2.1",
-    "uuid": "^9.0.1"
+    "socket.io": "^4.8.3",
+    "uuid": "^9.0.1",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

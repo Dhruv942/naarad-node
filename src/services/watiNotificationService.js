@@ -5,6 +5,7 @@ const WatiConfig = require("../config/watiConfig");
 const GeminiConfig = require("../config/geminiConfig");
 const WatiDispatch = require("../models/WatiDispatch");
 const User = require("../models/User");
+const { getIo } = require("../socket");
 
 class WatiNotificationService {
   constructor() {
@@ -609,6 +610,28 @@ Return ONLY valid JSON:
         message_sent: true,
         reason: "success",
       });
+
+      // Emit socket event
+      try {
+        const io = getIo();
+        const socketData = {
+          userId,
+          alertId,
+          article: {
+            title,
+            description,
+            imageUrl,
+          },
+        };
+        // Emit to a room specific to the user if you have one, or globally
+        io.emit("new-notification", socketData);
+        console.log("[SOCKET] Emitted 'new-notification' for user:", userId);
+      } catch (socketError) {
+        console.error(
+          "[SOCKET] Error emitting 'new-notification':",
+          socketError.message
+        );
+      }
 
       return {
         status: "success",
