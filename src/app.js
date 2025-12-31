@@ -12,19 +12,23 @@ const app = express();
 
 // Middleware
 const allowedOrigins = [
+  "https://www.naaradai.com",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://192.168.1.4:3001",
 ];
-
 const corsOptions = {
   origin: (origin, callback) => {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+    if (allowedOrigins.includes(origin) || !origin) {
       callback(null, true);
     } else {
+      console.log("CORS blocked for origin:", origin);
       callback(new Error("Not allowed by CORS"));
     }
   },
+  credentials: true,  // Important for cookies/auth
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 
 app.use(cors(corsOptions));

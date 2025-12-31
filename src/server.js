@@ -14,11 +14,14 @@ const server = http.createServer(app);
 const { setIo } = require("./socket");
 
 const allowedOrigins = [
+  "https://www.naaradai.com",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://192.168.1.4:3001",
   "http://192.168.1.4:3000"
 ];
+
+
 
 const io = new Server(server, {
   cors: {
