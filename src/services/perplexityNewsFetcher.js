@@ -323,7 +323,7 @@ ${followupsRaw || "None"}
 
 (IMPORTANT: In the actual request, all questions, all options, and all user selections for the selected subcategory will be inserted here exactly in this structure.)
 
-Your task:
+Your task and be very strict about it:
 1. Fetch the MOST relevant, meaningful, and high-quality news articles based on the user's true interests.
 2. Articles MUST be recent — published within the last 3 days.
 3. Prefer credible reporting over viral or low-quality content.
@@ -331,7 +331,7 @@ Your task:
 5. Prioritize articles that contain strong updates, discoveries, or meaningful insights.
 6. Avoid press releases, low-value blogs, SEO spam, AI-generated junk, filler content.
 7. Return ONLY the full original article text in JSON format.
-
+8.Do NOT return any article older than 3 days — absolutely no article published before this time window should be included.
 CRITICAL: FULL ARTICLE TEXT REQUIRED - NO ELLIPSES ALLOWED
 - You MUST fetch and return the COMPLETE, ENTIRE article text from start to finish
 - STRICTLY FORBIDDEN: Do NOT use ellipses (...) or any truncation markers like "...", "…", or ".." anywhere in the article text
